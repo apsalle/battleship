@@ -317,6 +317,15 @@
   .btn.start-btn:hover { background: #5A3E8F; }
   .btn.start-btn:disabled { background: #C9C0E8; cursor: not-allowed; }
 
+  .btn.start-btn.flash {
+    animation: flashPulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes flashPulse {
+    0%, 100% { background: #6B4FA0; box-shadow: 0 0 0 0 rgba(107, 79, 160, 0.4); }
+    50% { background: #9B8EC4; box-shadow: 0 0 18px 6px rgba(107, 79, 160, 0.5); }
+  }
+
   .btn.restart-btn { margin-top: 20px; }
 
   .controls {
@@ -327,6 +336,7 @@
     justify-content: center;
     margin-top: 8px;
   }
+
 
   .hidden { display: none !important; }
 
@@ -341,6 +351,10 @@
 <h1>Battleship</h1>
 <div class="status-bar" id="statusBar">Place your ships to begin.</div>
 
+<div class="controls" id="topControls">
+  <button class="btn start-btn" id="startBtn" disabled>Start Battle</button>
+</div>
+
 <div class="boards-container">
   <!-- Player Board -->
   <div class="board-section">
@@ -353,6 +367,7 @@
     <div class="placement-legend" id="placementLegend">
       <div>&#128433;&#65039; Left click &mdash; place horizontally</div>
       <div>&#128433;&#65039; Right click &mdash; place vertically</div>
+      <div>&#128433;&#65039; Click placed ship &mdash; remove &amp; reposition</div>
       <div>&#128433;&#65039; Double click &mdash; randomize all ships</div>
     </div>
   </div>
@@ -368,7 +383,6 @@
 </div>
 
 <div class="controls">
-  <button class="btn start-btn" id="startBtn" disabled>Start Battle</button>
   <button class="btn restart-btn hidden" id="restartBtn">New Game</button>
 </div>
 
@@ -403,6 +417,7 @@
   let clickTimer = null;
   let clickSuppressed = false;
   let playerTurnActive = true; // false while AI is taking its turn
+
 
   // === DOM REFS ===
   const playerGridEl = document.getElementById('playerGrid');
@@ -578,12 +593,64 @@
   function checkStartReady() {
     if (allShipsPlaced()) {
       startBtn.disabled = false;
+      startBtn.classList.add('flash');
       setStatus('All ships placed! Click Start Battle to begin.');
     }
   }
 
+  function removeShipAtCell(row, col) {
+    if (playerBoard[row][col] !== CELL.SHIP) return false;
+
+    // Find which ship occupies this cell
+    var targetShip = null;
+    var targetIndex = -1;
+    for (var i = 0; i < playerShips.length; i++) {
+      var s = playerShips[i];
+      if (!s.placed) continue;
+      for (var j = 0; j < s.cells.length; j++) {
+        if (s.cells[j].r === row && s.cells[j].c === col) {
+          targetShip = s;
+          targetIndex = i;
+          break;
+        }
+      }
+      if (targetShip) break;
+    }
+    if (!targetShip) return false;
+
+    // Clear the ship's cells from the board
+    targetShip.cells.forEach(function(pos) {
+      playerBoard[pos.r][pos.c] = CELL.EMPTY;
+    });
+
+    // Reset ship state
+    targetShip.cells = [];
+    targetShip.placed = false;
+    targetShip.hits = 0;
+    targetShip.sunk = false;
+
+    // Select this ship for re-placement
+    currentShipIndex = targetIndex;
+
+    // Disable start button since not all ships are placed
+    startBtn.disabled = true;
+    startBtn.classList.remove('flash');
+
+    updatePlacementInfo();
+    renderAll();
+    setStatus('Ship removed! Re-place your ' + targetShip.name + ' (' + targetShip.size + ')');
+    return true;
+  }
+
   function handlePlacement(row, col, horizontal) {
     if (phase !== PHASE.PLACEMENT) return;
+
+    // If clicked cell has a placed ship, remove it for re-placement
+    if (playerBoard[row][col] === CELL.SHIP) {
+      removeShipAtCell(row, col);
+      return;
+    }
+
     if (currentShipIndex >= SHIPS.length) return;
 
     const ship = playerShips[currentShipIndex];
@@ -715,7 +782,9 @@
     playerTurnActive = false;
     setTimeout(() => {
       aiTurn();
-      if (phase === PHASE.BATTLE) playerTurnActive = true;
+      if (phase === PHASE.BATTLE) {
+        playerTurnActive = true;
+      }
     }, 400);
   }
 
@@ -1017,6 +1086,7 @@
   function startBattle() {
     if (!allShipsPlaced()) return;
     phase = PHASE.BATTLE;
+    startBtn.classList.remove('flash');
     unbindPlacementEvents();
     bindBattleEvents();
     startBtn.classList.add('hidden');
@@ -1050,7 +1120,7 @@
 
     // Reset UI
     startBtn.disabled = true;
-    startBtn.classList.remove('hidden');
+    startBtn.classList.remove('hidden', 'flash');
     restartBtn.classList.add('hidden');
     placementInfo.classList.remove('hidden');
     placementLegend.classList.remove('hidden');
