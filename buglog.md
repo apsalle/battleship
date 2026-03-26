@@ -70,6 +70,22 @@ This ensures that a double-click only triggers the randomize action, never indiv
 
 ---
 
+## Bug #6: Trophy overlay shown on wrong grid for win/loss outcomes
+
+**What:** When the trophy overlay feature was first implemented, `showTrophy(playerGridEl)` was called on player victory (placing the trophy on the player's own fleet) and `showTrophy(enemyGridEl)` on AI victory (placing the trophy on the AI's fleet). This was backwards — the trophy should appear on the grid that was conquered, where all the sunk ships are visible, not on an unrelated board.
+
+**Cause:** Ambiguity in the requirement "show a trophy over their winning player's 10x10 square." The initial implementation interpreted this as the winner's own grid, but the correct UX is to show the trophy over the grid where the decisive action happened — the enemy grid on player victory (where the player sunk all ships) and the player grid on AI victory (where the AI sunk all ships).
+
+**Fix:** Swapped the `showTrophy` calls:
+- Player victory: `showTrophy(enemyGridEl)` — trophy appears over Enemy Waters (the conquered fleet)
+- AI victory: `showTrophy(playerGridEl)` — trophy appears over Your Fleet (the conquered fleet)
+
+**Found by:** Devin Review (automated code review)
+
+**File:** `game.html`, `handlePlayerAttack()` and `aiTurn()`
+
+---
+
 ## Testing Summary
 
 All required edge cases were tested and verified:

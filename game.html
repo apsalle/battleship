@@ -688,7 +688,7 @@
     if (checkWin(enemyShips)) {
       phase = PHASE.GAME_OVER;
       setStatus('Victory! You sunk all enemy ships!', 'win');
-      showTrophy(playerGridEl);
+      showTrophy(enemyGridEl);
       restartBtn.classList.remove('hidden');
       return;
     }
@@ -797,7 +797,7 @@
     if (checkWin(playerShips)) {
       phase = PHASE.GAME_OVER;
       setStatus('Defeat! The AI sunk all your ships.', 'lose');
-      showTrophy(enemyGridEl);
+      showTrophy(playerGridEl);
       restartBtn.classList.remove('hidden');
       return;
     }
