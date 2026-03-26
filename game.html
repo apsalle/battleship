@@ -311,6 +311,49 @@
     margin-top: 8px;
   }
 
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeSlideOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(10px); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  @keyframes bounceIn {
+    0% { opacity: 0; transform: scale(0.8); }
+    50% { transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .instruction-tip {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 0.95rem;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: #F0ECF9;
+    color: #3D3457;
+    text-align: center;
+    max-width: 700px;
+    width: 100%;
+    margin-bottom: 12px;
+    animation: fadeSlideIn 0.4s ease-out;
+  }
+  .instruction-tip.hiding {
+    animation: fadeSlideOut 0.3s ease-in forwards;
+  }
+
+  .status-bar.animate-in {
+    animation: fadeSlideIn 0.3s ease-out;
+  }
+
+  .pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
   .hidden { display: none !important; }
 
   @media (max-width: 900px) {
@@ -323,6 +366,7 @@
 
 <h1>Battleship</h1>
 <div class="status-bar" id="statusBar">Place your ships to begin.</div>
+<div class="instruction-tip hidden" id="instructionTip"></div>
 
 <div class="boards-container">
   <!-- Player Board -->
@@ -387,6 +431,13 @@
   let clickSuppressed = false;
   let playerTurnActive = true; // false while AI is taking its turn
 
+  let shownBattleIntro = false;
+  let shownFirstHit = false;
+  let shownFirstMiss = false;
+  let shownFirstSunk = false;
+  let instructionTipTimeout = null;
+  let hideAnimTimeout = null;
+
   // === DOM REFS ===
   const playerGridEl = document.getElementById('playerGrid');
   const enemyGridEl = document.getElementById('enemyGrid');
@@ -397,6 +448,7 @@
   const enemyRoster = document.getElementById('enemyRoster');
   const startBtn = document.getElementById('startBtn');
   const restartBtn = document.getElementById('restartBtn');
+  const instructionTip = document.getElementById('instructionTip');
 
   // === HELPERS ===
   function createBoard() {
@@ -417,6 +469,38 @@
   function setStatus(msg, cssClass) {
     statusBar.textContent = msg;
     statusBar.className = 'status-bar' + (cssClass ? ' ' + cssClass : '');
+    // Re-trigger animation
+    statusBar.classList.remove('animate-in');
+    statusBar.offsetHeight; // force reflow
+    statusBar.classList.add('animate-in');
+  }
+
+  function showInstruction(msg, duration) {
+    // Clear any pending hide
+    if (instructionTipTimeout) clearTimeout(instructionTipTimeout);
+    if (hideAnimTimeout) clearTimeout(hideAnimTimeout);
+
+    instructionTip.textContent = msg;
+    instructionTip.classList.remove('hidden', 'hiding');
+    // Re-trigger animation
+    instructionTip.style.animation = 'none';
+    instructionTip.offsetHeight; // force reflow
+    instructionTip.style.animation = '';
+
+    if (duration) {
+      instructionTipTimeout = setTimeout(() => hideInstruction(), duration);
+    }
+  }
+
+  function hideInstruction() {
+    if (instructionTipTimeout) clearTimeout(instructionTipTimeout);
+    instructionTip.classList.add('hiding');
+    if (hideAnimTimeout) clearTimeout(hideAnimTimeout);
+    hideAnimTimeout = setTimeout(() => {
+      instructionTip.classList.add('hidden');
+      instructionTip.classList.remove('hiding');
+      hideAnimTimeout = null;
+    }, 300);
   }
 
   function getShipCells(row, col, size, horizontal) {
@@ -545,6 +629,10 @@
     } else {
       placementInfo.textContent = 'All ships placed!';
     }
+    // Animate the text change
+    placementInfo.style.animation = 'none';
+    placementInfo.offsetHeight;
+    placementInfo.style.animation = 'fadeSlideIn 0.3s ease-out';
   }
 
   function findNextUnplacedShip() {
@@ -685,9 +773,25 @@
       setStatus('You sunk the enemy ' + shipName + '!', 'sunk');
     }
 
+    let shownFirstTimeTip = false;
+    if (result === 'hit' && !shownFirstHit) {
+      shownFirstHit = true;
+      shownFirstTimeTip = true;
+      showInstruction('💡 Nice hit! Try targeting adjacent cells to find the rest of the ship.', 4000);
+    } else if (result === 'miss' && !shownFirstMiss) {
+      shownFirstMiss = true;
+      shownFirstTimeTip = true;
+      showInstruction('💡 Miss! Try a different area. Ships are at least 2 cells long.', 4000);
+    } else if (result.startsWith('sunk:') && !shownFirstSunk) {
+      shownFirstSunk = true;
+      shownFirstTimeTip = true;
+      showInstruction('🔥 Ship destroyed! ' + (5 - enemyShips.filter(s => s.sunk).length) + ' enemy ships remaining.', 4000);
+    }
+
     if (checkWin(enemyShips)) {
       phase = PHASE.GAME_OVER;
       setStatus('Victory! You sunk all enemy ships!', 'win');
+      showInstruction('🏆 Congratulations, Admiral! You won the battle!');
       showTrophy(enemyGridEl);
       restartBtn.classList.remove('hidden');
       return;
@@ -695,9 +799,17 @@
 
     // AI turn after a short delay
     playerTurnActive = false;
+    if (!shownFirstTimeTip) {
+      showInstruction('⏳ Enemy is taking aim...', null);
+    }
     setTimeout(() => {
       aiTurn();
-      if (phase === PHASE.BATTLE) playerTurnActive = true;
+      if (phase === PHASE.BATTLE) {
+        if (!shownFirstTimeTip) {
+          hideInstruction();
+        }
+        playerTurnActive = true;
+      }
     }, 400);
   }
 
@@ -797,6 +909,7 @@
     if (checkWin(playerShips)) {
       phase = PHASE.GAME_OVER;
       setStatus('Defeat! The AI sunk all your ships.', 'lose');
+      showInstruction('💀 Your fleet has been destroyed. Better luck next time!');
       showTrophy(playerGridEl);
       restartBtn.classList.remove('hidden');
       return;
@@ -996,6 +1109,10 @@
     placementInfo.classList.add('hidden');
     placementLegend.classList.add('hidden');
     setStatus('Battle begins! Click on enemy waters to fire.');
+    if (!shownBattleIntro) {
+      shownBattleIntro = true;
+      showInstruction('🎯 Click any cell on the enemy grid to fire. Try to find and sink all 5 ships!', 5000);
+    }
     renderAll();
   }
 
@@ -1014,6 +1131,14 @@
     clickTimer = null;
     clickSuppressed = false;
     playerTurnActive = true;
+
+    shownBattleIntro = false;
+    shownFirstHit = false;
+    shownFirstMiss = false;
+    shownFirstSunk = false;
+    if (instructionTipTimeout) clearTimeout(instructionTipTimeout);
+    if (hideAnimTimeout) clearTimeout(hideAnimTimeout);
+    instructionTip.classList.add('hidden');
 
     // Place enemy ships randomly
     placeShipsRandomly(enemyBoard, enemyShips, 0);
@@ -1062,6 +1187,8 @@
   }
 
   init();
+
+  showInstruction('👋 Welcome to Battleship! Place your ships on the left grid to begin.', 6000);
 })();
 </script>
 </body>
