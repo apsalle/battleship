@@ -413,6 +413,7 @@
   let shownFirstMiss = false;
   let shownFirstSunk = false;
   let instructionTipTimeout = null;
+  let hideAnimTimeout = null;
 
   // === DOM REFS ===
   const playerGridEl = document.getElementById('playerGrid');
@@ -454,6 +455,7 @@
   function showInstruction(msg, duration) {
     // Clear any pending hide
     if (instructionTipTimeout) clearTimeout(instructionTipTimeout);
+    if (hideAnimTimeout) clearTimeout(hideAnimTimeout);
 
     instructionTip.textContent = msg;
     instructionTip.classList.remove('hidden', 'hiding');
@@ -470,9 +472,11 @@
   function hideInstruction() {
     if (instructionTipTimeout) clearTimeout(instructionTipTimeout);
     instructionTip.classList.add('hiding');
-    setTimeout(() => {
+    if (hideAnimTimeout) clearTimeout(hideAnimTimeout);
+    hideAnimTimeout = setTimeout(() => {
       instructionTip.classList.add('hidden');
       instructionTip.classList.remove('hiding');
+      hideAnimTimeout = null;
     }, 300);
   }
 
@@ -746,14 +750,18 @@
       setStatus('You sunk the enemy ' + shipName + '!', 'sunk');
     }
 
+    let shownFirstTimeTip = false;
     if (result === 'hit' && !shownFirstHit) {
       shownFirstHit = true;
+      shownFirstTimeTip = true;
       showInstruction('💡 Nice hit! Try targeting adjacent cells to find the rest of the ship.', 4000);
     } else if (result === 'miss' && !shownFirstMiss) {
       shownFirstMiss = true;
+      shownFirstTimeTip = true;
       showInstruction('💡 Miss! Try a different area. Ships are at least 2 cells long.', 4000);
     } else if (result.startsWith('sunk:') && !shownFirstSunk) {
       shownFirstSunk = true;
+      shownFirstTimeTip = true;
       showInstruction('🔥 Ship destroyed! ' + (5 - enemyShips.filter(s => s.sunk).length) + ' enemy ships remaining.', 4000);
     }
 
@@ -767,7 +775,9 @@
 
     // AI turn after a short delay
     playerTurnActive = false;
-    showInstruction('⏳ Enemy is taking aim...', null);
+    if (!shownFirstTimeTip) {
+      showInstruction('⏳ Enemy is taking aim...', null);
+    }
     setTimeout(() => {
       aiTurn();
       if (phase === PHASE.BATTLE) {
@@ -1085,6 +1095,7 @@
     shownFirstMiss = false;
     shownFirstSunk = false;
     if (instructionTipTimeout) clearTimeout(instructionTipTimeout);
+    if (hideAnimTimeout) clearTimeout(hideAnimTimeout);
     instructionTip.classList.add('hidden');
 
     // Place enemy ships randomly
