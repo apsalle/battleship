@@ -609,7 +609,7 @@
   }
 
   // Track last hovered position for preview
-  let lastHoverRow = -1, lastHoverCol = -1, lastHoverHorizontal = true;
+  let lastHoverRow = -1, lastHoverCol = -1;
 
   // === ATTACK LOGIC ===
   function processAttack(board, ships, row, col) {
@@ -915,11 +915,6 @@
     handlePlayerAttack(row, col);
   }
 
-  // Prevent context menu on enemy grid during battle too (consistency)
-  function onEnemyGridRightClick(e) {
-    e.preventDefault();
-  }
-
   // Global context menu suppressor for both grids (always active)
   function suppressContextMenu(e) { e.preventDefault(); }
   playerGridEl.addEventListener('contextmenu', suppressContextMenu);
@@ -950,9 +945,6 @@
   function unbindBattleEvents() {
     enemyGridEl.removeEventListener('click', onEnemyGridClick);
   }
-
-  // Keep context menu suppressed on player grid at all times during placement
-  // (this is handled by onPlayerGridRightClick which calls preventDefault)
 
   // === GAME FLOW ===
   function startBattle() {
