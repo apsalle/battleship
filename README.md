@@ -1,0 +1,1 @@
+# Battleship\n\nBrowser-based Battleship game with AI opponent. Single HTML/CSS/JS file, no dependencies.
