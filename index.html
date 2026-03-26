@@ -926,14 +926,70 @@
     }
 
     /**
+     * Removes a previously placed ship from the board so it can be repositioned.
+     * Clears the ship's cells from the board, removes it from playerShips,
+     * resets the corresponding button, and selects it for re-placement.
+     *
+     * @param {number} row - Row of the clicked cell
+     * @param {number} col - Column of the clicked cell
+     * @returns {boolean} True if a ship was removed
+     */
+    function removeShipAtCell(row, col) {
+        const cell = playerBoard[row][col];
+        if (cell.state !== CELL.SHIP || !cell.ship) return false;
+
+        const ship = cell.ship;
+        const shipName = ship.name;
+
+        // Clear all cells occupied by this ship
+        ship.cells.forEach(function (pos) {
+            playerBoard[pos.row][pos.col].state = CELL.EMPTY;
+            playerBoard[pos.row][pos.col].ship = null;
+        });
+
+        // Remove the ship from playerShips
+        playerShips = playerShips.filter(function (s) { return s !== ship; });
+
+        // Reset the corresponding button
+        const btn = document.querySelector('[data-ship="' + shipName.toLowerCase() + '"]');
+        if (btn) {
+            btn.classList.remove('placed');
+        }
+
+        // Select this ship for re-placement
+        const idx = SHIPS.findIndex(function (s) {
+            return s.name.toLowerCase() === shipName.toLowerCase();
+        });
+        if (idx !== -1) {
+            currentShipIndex = idx;
+            shipButtons.forEach(function (b) { b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+            setStatus('Ship removed! Re-place your ' + shipName + ' (' + SHIPS[idx].size + ' cells)');
+        }
+
+        // Re-render the board
+        renderBoard('player-grid', playerBoard, true);
+        renderRoster('player-roster', playerShips);
+
+        return true;
+    }
+
+    /**
      * Handles clicking on the player grid during placement phase.
-     * Places the currently selected ship at the clicked position.
+     * If the clicked cell contains a placed ship, removes it for repositioning.
+     * Otherwise, places the currently selected ship at the clicked position.
      */
     function handlePlayerGridClick(e) {
         if (gamePhase !== PHASE.PLACEMENT) return;
 
         const row = parseInt(e.currentTarget.dataset.row);
         const col = parseInt(e.currentTarget.dataset.col);
+
+        // If clicked cell has a ship, remove it for re-placement
+        if (playerBoard[row][col].state === CELL.SHIP && playerBoard[row][col].ship) {
+            removeShipAtCell(row, col);
+            return;
+        }
 
         // Check if current ship is already placed
         if (isShipAlreadyPlaced(currentShipIndex)) {

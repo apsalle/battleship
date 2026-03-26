@@ -346,6 +346,7 @@
     <div class="placement-legend" id="placementLegend">
       <div>&#128433;&#65039; Left click &mdash; place horizontally</div>
       <div>&#128433;&#65039; Right click &mdash; place vertically</div>
+      <div>&#128433;&#65039; Click placed ship &mdash; remove &amp; reposition</div>
       <div>&#128433;&#65039; Double click &mdash; randomize all ships</div>
     </div>
   </div>
@@ -577,8 +578,59 @@
     }
   }
 
+  function removeShipAtCell(row, col) {
+    if (playerBoard[row][col] !== CELL.SHIP) return false;
+
+    // Find which ship occupies this cell
+    var targetShip = null;
+    var targetIndex = -1;
+    for (var i = 0; i < playerShips.length; i++) {
+      var s = playerShips[i];
+      if (!s.placed) continue;
+      for (var j = 0; j < s.cells.length; j++) {
+        if (s.cells[j].r === row && s.cells[j].c === col) {
+          targetShip = s;
+          targetIndex = i;
+          break;
+        }
+      }
+      if (targetShip) break;
+    }
+    if (!targetShip) return false;
+
+    // Clear the ship's cells from the board
+    targetShip.cells.forEach(function(pos) {
+      playerBoard[pos.r][pos.c] = CELL.EMPTY;
+    });
+
+    // Reset ship state
+    targetShip.cells = [];
+    targetShip.placed = false;
+    targetShip.hits = 0;
+    targetShip.sunk = false;
+
+    // Select this ship for re-placement
+    currentShipIndex = targetIndex;
+
+    // Disable start button since not all ships are placed
+    startBtn.disabled = true;
+    startBtn.classList.remove('flash');
+
+    updatePlacementInfo();
+    renderAll();
+    setStatus('Ship removed! Re-place your ' + targetShip.name + ' (' + targetShip.size + ')');
+    return true;
+  }
+
   function handlePlacement(row, col, horizontal) {
     if (phase !== PHASE.PLACEMENT) return;
+
+    // If clicked cell has a placed ship, remove it for re-placement
+    if (playerBoard[row][col] === CELL.SHIP) {
+      removeShipAtCell(row, col);
+      return;
+    }
+
     if (currentShipIndex >= SHIPS.length) return;
 
     const ship = playerShips[currentShipIndex];
