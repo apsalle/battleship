@@ -805,7 +805,9 @@
     setTimeout(() => {
       aiTurn();
       if (phase === PHASE.BATTLE) {
-        hideInstruction();
+        if (!shownFirstTimeTip) {
+          hideInstruction();
+        }
         playerTurnActive = true;
       }
     }, 400);
