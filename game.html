@@ -802,7 +802,7 @@
       phase = PHASE.GAME_OVER;
       setStatus('Victory! You sunk all enemy ships!', 'win');
       showInstruction('🏆 Congratulations, Admiral! You won the battle!');
-      showTrophy(playerGridEl);
+      showTrophy(enemyGridEl);
       restartBtn.classList.remove('hidden');
       return;
     }
@@ -920,7 +920,7 @@
       phase = PHASE.GAME_OVER;
       setStatus('Defeat! The AI sunk all your ships.', 'lose');
       showInstruction('💀 Your fleet has been destroyed. Better luck next time!');
-      showTrophy(enemyGridEl);
+      showTrophy(playerGridEl);
       restartBtn.classList.remove('hidden');
       return;
     }
