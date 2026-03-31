@@ -86,7 +86,8 @@
          * ============================================================ */
         #placement-controls {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: row;
+            flex-wrap: nowrap;
             gap: 10px;
             justify-content: center;
             align-items: center;
@@ -455,9 +456,6 @@
         <div class="score-item">Losses: <span id="loss-count">0</span></div>
     </div>
 
-    <!-- Status bar shows current phase info and turn-by-turn feedback -->
-    <div id="status-bar">Place your ships! Select a ship below, then click the grid.</div>
-
     <!-- Ship placement controls: visible during placement phase only -->
     <div id="placement-controls">
         <button id="ship-carrier" class="ship-btn active" data-ship="carrier" data-size="5">Carrier (5)</button>
@@ -469,6 +467,9 @@
         <button id="randomize-btn">Random</button>
         <button id="reset-placement-btn">Reset</button>
     </div>
+
+    <!-- Status bar shows current phase info and turn-by-turn feedback -->
+    <div id="status-bar"></div>
 
     <!-- Main game boards -->
     <div id="boards-container">
@@ -1582,7 +1583,7 @@
         renderRoster('player-roster', playerShips);
         renderRoster('enemy-roster', enemyShips);
 
-        setStatus('Place your ships! Select a ship below, then click the grid.');
+        setStatus('Place your ' + SHIPS[0].name + ' (' + SHIPS[0].size + ' cells)');
         statusBar.className = '';
     }
 
@@ -1652,7 +1653,7 @@
         renderBoard('player-grid', playerBoard, true);
         renderBoard('enemy-grid', enemyBoard, false);
 
-        setStatus('Place your ships! Select a ship below, then click the grid.');
+        setStatus('Place your ' + SHIPS[0].name + ' (' + SHIPS[0].size + ' cells)');
     }
 
     init();
