@@ -206,6 +206,23 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
+  .skull-overlay {
+    position: absolute;
+    top: 32px; /* offset past column labels */
+    left: 32px; /* offset past row labels */
+    width: 400px; /* 10 cells x 40px */
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8rem;
+    background: rgba(160, 79, 79, 0.25);
+    border-radius: 12px;
+    pointer-events: none;
+    z-index: 10;
+    animation: trophyPop 0.5s ease-out;
+  }
+
   .ship-roster {
     margin-top: 12px;
     display: flex;
@@ -755,7 +772,8 @@
     if (checkWin(enemyShips)) {
       phase = PHASE.GAME_OVER;
       setStatus('Victory! You sunk all enemy ships!', 'win');
-      showTrophy(enemyGridEl);
+      showTrophy(playerGridEl);
+      showSkull(enemyGridEl);
       restartBtn.classList.remove('hidden');
       return;
     }
@@ -866,7 +884,8 @@
     if (checkWin(playerShips)) {
       phase = PHASE.GAME_OVER;
       setStatus('Defeat! The AI sunk all your ships.', 'lose');
-      showTrophy(playerGridEl);
+      showTrophy(enemyGridEl);
+      showSkull(playerGridEl);
       restartBtn.classList.remove('hidden');
       return;
     }
@@ -929,7 +948,7 @@
   // === TROPHY OVERLAY ===
   function showTrophy(gridEl) {
     // Remove any existing trophy
-    removeTrophies();
+    removeOverlays();
     const wrapper = gridEl.closest('.grid-wrapper');
     const overlay = document.createElement('div');
     overlay.className = 'trophy-overlay';
@@ -937,8 +956,16 @@
     wrapper.appendChild(overlay);
   }
 
-  function removeTrophies() {
-    document.querySelectorAll('.trophy-overlay').forEach(el => el.remove());
+  function showSkull(gridEl) {
+    const wrapper = gridEl.closest('.grid-wrapper');
+    const overlay = document.createElement('div');
+    overlay.className = 'skull-overlay';
+    overlay.textContent = '\uD83D\uDC80';
+    wrapper.appendChild(overlay);
+  }
+
+  function removeOverlays() {
+    document.querySelectorAll('.trophy-overlay, .skull-overlay').forEach(el => el.remove());
   }
 
   // === EVENT HANDLERS ===
@@ -1100,8 +1127,8 @@
     updatePlacementInfo();
     setStatus('Place your ships to begin.');
 
-    // Remove trophies and rebuild grids
-    removeTrophies();
+    // Remove overlays and rebuild grids
+    removeOverlays();
     buildGridDOM(playerGridEl, false);
     buildGridDOM(enemyGridEl, true);
     renderAll();
