@@ -330,9 +330,10 @@
 
   .controls {
     display: flex;
+    flex-direction: row;
     gap: 12px;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     margin-top: 8px;
   }
@@ -349,11 +350,11 @@
 <body>
 
 <h1>Battleship</h1>
-<div class="status-bar" id="statusBar">Place your ships to begin.</div>
-
 <div class="controls" id="topControls">
   <button class="btn start-btn" id="startBtn" disabled>Start Battle</button>
 </div>
+
+<div class="status-bar" id="statusBar"></div>
 
 <div class="boards-container">
   <!-- Player Board -->
@@ -1125,7 +1126,7 @@
     placementInfo.classList.remove('hidden');
     placementLegend.classList.remove('hidden');
     updatePlacementInfo();
-    setStatus('Place your ships to begin.');
+    setStatus('Placing: ' + SHIPS[0].name + ' (' + SHIPS[0].size + ')');
 
     // Remove overlays and rebuild grids
     removeOverlays();
@@ -1151,6 +1152,7 @@
     buildGridDOM(enemyGridEl, true);
     renderAll();
     updatePlacementInfo();
+    setStatus('Placing: ' + SHIPS[0].name + ' (' + SHIPS[0].size + ')');
 
     bindPlacementEvents();
 
