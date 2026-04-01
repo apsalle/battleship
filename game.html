@@ -268,11 +268,17 @@
   }
 
   .placement-legend {
-    margin-top: 16px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
     font-size: 0.82rem;
     color: #6B4FA0;
     line-height: 1.8;
-    text-align: left;
+    text-align: center;
     background: #EDE8FA;
     border-radius: 8px;
     padding: 10px 14px;
@@ -350,11 +356,18 @@
 <body>
 
 <h1>Battleship</h1>
-<div class="controls" id="topControls">
-  <button class="btn start-btn" id="startBtn" disabled>Start Battle</button>
+<div class="placement-legend" id="placementLegend">
+  <div>&#128433;&#65039; Left click &mdash; place horizontally</div>
+  <div>&#128433;&#65039; Right click &mdash; place vertically</div>
+  <div>&#128433;&#65039; Click placed ship &mdash; remove &amp; reposition</div>
+  <div>&#128433;&#65039; Double click &mdash; randomize all ships</div>
 </div>
 
 <div class="status-bar" id="statusBar"></div>
+
+<div class="controls" id="topControls">
+  <button class="btn start-btn" id="startBtn" disabled>Start Battle</button>
+</div>
 
 <div class="boards-container">
   <!-- Player Board -->
@@ -365,12 +378,6 @@
     </div>
     <div class="placement-info" id="placementInfo">Placing: Carrier (5)</div>
     <div class="ship-roster" id="playerRoster"></div>
-    <div class="placement-legend" id="placementLegend">
-      <div>&#128433;&#65039; Left click &mdash; place horizontally</div>
-      <div>&#128433;&#65039; Right click &mdash; place vertically</div>
-      <div>&#128433;&#65039; Click placed ship &mdash; remove &amp; reposition</div>
-      <div>&#128433;&#65039; Double click &mdash; randomize all ships</div>
-    </div>
   </div>
 
   <!-- Enemy Board -->
