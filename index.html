@@ -1863,12 +1863,8 @@
             triedCells: new Set()
         };
 
-        // Reset UI
-        placementControls.style.display = 'flex';
-        // On mobile use grid layout; on desktop use flex
-        if (window.innerWidth <= 480) {
-            placementControls.style.display = 'grid';
-        }
+        // Reset UI – clear inline style so CSS media query controls layout
+        placementControls.style.display = '';
         restartBtn.style.display = 'none';
         orientationBtn.textContent = 'Horizontal';
 
