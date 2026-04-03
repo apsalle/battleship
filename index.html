@@ -398,6 +398,21 @@
         }
 
         /* ============================================================
+         * PENDING PLACEMENT PREVIEW (tap-to-place)
+         * ============================================================ */
+        .cell.pending-valid {
+            background: rgba(102, 187, 106, 0.45) !important;
+            border-color: rgba(102, 187, 106, 0.7) !important;
+            box-shadow: inset 0 0 6px rgba(102, 187, 106, 0.5);
+        }
+
+        .cell.pending-invalid {
+            background: rgba(239, 83, 80, 0.45) !important;
+            border-color: rgba(239, 83, 80, 0.7) !important;
+            box-shadow: inset 0 0 6px rgba(239, 83, 80, 0.5);
+        }
+
+        /* ============================================================
          * RESPONSIVE ADJUSTMENTS
          * ============================================================ */
         @media (max-width: 900px) {
@@ -442,6 +457,122 @@
             }
             #boards-container {
                 gap: 15px;
+            }
+        }
+
+        /* ============================================================
+         * MOBILE-FIRST RESPONSIVE (phones ≤ 480px)
+         * ============================================================ */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px 4px;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+                letter-spacing: 2px;
+                margin-bottom: 6px;
+            }
+
+            #score-tracker {
+                gap: 12px;
+                margin-bottom: 6px;
+                font-size: 0.8rem;
+            }
+
+            .score-item {
+                padding: 4px 10px;
+            }
+
+            #status-bar {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+                min-height: 38px;
+                margin: 8px 0;
+            }
+
+            #status-bar.win, #status-bar.lose {
+                font-size: 1rem;
+            }
+
+            /* Placement controls: 2-column grid */
+            #placement-controls {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+                width: 100%;
+                padding: 0 4px;
+                margin-bottom: 8px;
+            }
+
+            #placement-controls button {
+                padding: 6px 8px;
+                font-size: 0.78rem;
+                text-align: center;
+                width: 100%;
+            }
+
+            /* vw-based cell sizing for 10-column grid to fit screen */
+            .cell {
+                width: 8.2vw;
+                height: 8.2vw;
+                font-size: 0.7rem;
+            }
+
+            .grid {
+                grid-template-columns: repeat(10, 8.2vw);
+                grid-template-rows: repeat(10, 8.2vw);
+            }
+
+            .column-labels {
+                margin-left: 20px;
+            }
+
+            .column-labels span {
+                width: 8.2vw;
+                height: 16px;
+                font-size: 0.6rem;
+            }
+
+            .row-label {
+                width: 20px;
+                height: 8.2vw;
+                font-size: 0.6rem;
+            }
+
+            .board-label {
+                font-size: 0.85rem;
+                margin-bottom: 4px;
+            }
+
+            #boards-container {
+                gap: 10px;
+                margin: 6px 0 12px;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            /* Single-board view on mobile */
+            #boards-container.show-player .board-wrapper:nth-child(2) {
+                display: none;
+            }
+
+            #boards-container.show-enemy .board-wrapper:nth-child(1) {
+                display: none;
+            }
+
+            .ship-roster {
+                font-size: 0.75rem;
+            }
+
+            .roster-block {
+                width: 10px;
+                height: 10px;
+            }
+
+            #restart-btn {
+                padding: 10px 24px;
+                font-size: 0.95rem;
             }
         }
     </style>
@@ -564,6 +695,18 @@
     let isPlayerTurn = true;
     let wins = 0;
     let losses = 0;
+
+    /** Whether the device supports touch (used for tap-to-place flow) */
+    const isTouchDevice = 'ontouchstart' in window;
+
+    /**
+     * Pending placement state for the two-tap mobile flow.
+     * On touch devices, first tap shows a preview; second tap on the
+     * same cell confirms placement.
+     *
+     * pendingPlacement: { row, col, shipIndex } or null
+     */
+    let pendingPlacement = null;
 
     /**
      * AI state for hunt/target mode.
@@ -977,8 +1120,15 @@
 
     /**
      * Handles clicking on the player grid during placement phase.
-     * If the clicked cell contains a placed ship, removes it for repositioning.
-     * Otherwise, places the currently selected ship at the clicked position.
+     *
+     * DESKTOP: single click places immediately (unchanged behaviour).
+     * TOUCH:   two-tap flow — first tap shows a pending preview,
+     *          second tap on the same cell confirms placement.
+     *          Tapping a different empty cell moves the preview.
+     *
+     * Tapping an already-placed ship (touch or desktop) during the
+     * placement phase now attempts an in-place rotation first.
+     * If rotation is invalid the ship is removed for repositioning.
      */
     function handlePlayerGridClick(e) {
         if (gamePhase !== PHASE.PLACEMENT) return;
@@ -986,19 +1136,93 @@
         const row = parseInt(e.currentTarget.dataset.row);
         const col = parseInt(e.currentTarget.dataset.col);
 
-        // If clicked cell has a ship, remove it for re-placement
+        // --- Tap on an already-placed ship: try in-place rotate, else remove ---
         if (playerBoard[row][col].state === CELL.SHIP && playerBoard[row][col].ship) {
-            removeShipAtCell(row, col);
+            tryRotateOrRemoveShip(row, col);
             return;
         }
 
-        // Check if current ship is already placed
+        // Resolve which ship we're placing
         if (isShipAlreadyPlaced(currentShipIndex)) {
-            // Find the next unplaced ship
             const nextIdx = findNextUnplacedShip();
-            if (nextIdx === -1) return; // All placed
+            if (nextIdx === -1) return;
             currentShipIndex = nextIdx;
         }
+
+        // --- Touch two-tap flow ---
+        if (isTouchDevice) {
+            // If we already have a pending preview at THIS cell, confirm placement
+            if (pendingPlacement &&
+                pendingPlacement.row === row &&
+                pendingPlacement.col === col &&
+                pendingPlacement.shipIndex === currentShipIndex) {
+                confirmPlacement(row, col);
+                return;
+            }
+
+            // Otherwise show/move the pending preview
+            showPendingPreview(row, col);
+            return;
+        }
+
+        // --- Desktop: immediate placement ---
+        confirmPlacement(row, col);
+    }
+
+    /**
+     * Shows a pending placement preview on touch devices (first tap).
+     */
+    function showPendingPreview(row, col) {
+        // Clear previous pending preview
+        clearPendingPreview();
+
+        const activeIdx = isShipAlreadyPlaced(currentShipIndex)
+            ? findNextUnplacedShip()
+            : currentShipIndex;
+        if (activeIdx === -1) return;
+
+        const size = SHIPS[activeIdx].size;
+        const valid = canPlaceShip(playerBoard, row, col, size, isHorizontal);
+        const cells = getShipCells(row, col, size, isHorizontal);
+
+        const gridEl = document.getElementById('player-grid');
+        cells.forEach(function (pos) {
+            if (pos.row >= 0 && pos.row < GRID_SIZE && pos.col >= 0 && pos.col < GRID_SIZE) {
+                const cellEl = gridEl.querySelector(
+                    '[data-row="' + pos.row + '"][data-col="' + pos.col + '"]'
+                );
+                if (cellEl) {
+                    cellEl.classList.add(valid ? 'pending-valid' : 'pending-invalid');
+                }
+            }
+        });
+
+        pendingPlacement = { row: row, col: col, shipIndex: activeIdx };
+
+        if (valid) {
+            setStatus('Tap again to place ' + SHIPS[activeIdx].name + ' here');
+        } else {
+            setStatus('Cannot place ' + SHIPS[activeIdx].name + ' there — tap elsewhere');
+        }
+    }
+
+    /**
+     * Clears the pending-placement preview classes from the grid.
+     */
+    function clearPendingPreview() {
+        const gridEl = document.getElementById('player-grid');
+        if (!gridEl) return;
+        gridEl.querySelectorAll('.cell').forEach(function (cell) {
+            cell.classList.remove('pending-valid', 'pending-invalid');
+        });
+        pendingPlacement = null;
+    }
+
+    /**
+     * Confirms ship placement at the given cell (second tap or desktop click).
+     */
+    function confirmPlacement(row, col) {
+        clearPendingPreview();
 
         const shipDef = SHIPS[currentShipIndex];
         const ship = createShip(shipDef.name, shipDef.size);
@@ -1008,25 +1232,20 @@
             return;
         }
 
-        // Place the ship
         placeShip(playerBoard, ship, row, col, isHorizontal);
         playerShips.push(ship);
 
-        // Mark button as placed
         const btn = document.querySelector('[data-ship="' + shipDef.name.toLowerCase() + '"]');
         if (btn) {
             btn.classList.remove('active');
             btn.classList.add('placed');
         }
 
-        // Render the updated board
         renderBoard('player-grid', playerBoard, true);
         renderRoster('player-roster', playerShips);
 
-        // Move to next ship or start battle
         const nextIdx = findNextUnplacedShip();
         if (nextIdx === -1) {
-            // All ships placed, start the battle!
             startBattle();
         } else {
             currentShipIndex = nextIdx;
@@ -1039,9 +1258,72 @@
     }
 
     /**
+     * Attempts to rotate a placed ship in-place. If rotation is invalid
+     * the ship is removed for repositioning instead.
+     *
+     * @param {number} row - Row of the tapped cell
+     * @param {number} col - Column of the tapped cell
+     */
+    function tryRotateOrRemoveShip(row, col) {
+        const cell = playerBoard[row][col];
+        if (cell.state !== CELL.SHIP || !cell.ship) return;
+
+        const ship = cell.ship;
+        const shipName = ship.name;
+        const shipSize = ship.size;
+        const shipCells = ship.cells.slice(); // copy
+
+        // Determine current orientation from the cell list
+        const currentHoriz = shipCells.length > 1
+            ? shipCells[0].row === shipCells[1].row
+            : isHorizontal;
+        const newHoriz = !currentHoriz;
+
+        // Use the ship's origin (first cell) as pivot
+        const originRow = shipCells[0].row;
+        const originCol = shipCells[0].col;
+
+        // Temporarily remove the ship from the board
+        shipCells.forEach(function (pos) {
+            playerBoard[pos.row][pos.col].state = CELL.EMPTY;
+            playerBoard[pos.row][pos.col].ship = null;
+        });
+
+        // Check if rotated placement is valid
+        if (canPlaceShip(playerBoard, originRow, originCol, shipSize, newHoriz)) {
+            // Re-place with new orientation
+            ship.cells = [];
+            placeShip(playerBoard, ship, originRow, originCol, newHoriz);
+            renderBoard('player-grid', playerBoard, true);
+            setStatus(shipName + ' rotated to ' + (newHoriz ? 'horizontal' : 'vertical'));
+        } else {
+            // Rotation invalid — remove ship for repositioning
+            playerShips = playerShips.filter(function (s) { return s !== ship; });
+
+            const btn = document.querySelector('[data-ship="' + shipName.toLowerCase() + '"]');
+            if (btn) btn.classList.remove('placed');
+
+            const idx = SHIPS.findIndex(function (s) {
+                return s.name.toLowerCase() === shipName.toLowerCase();
+            });
+            if (idx !== -1) {
+                currentShipIndex = idx;
+                shipButtons.forEach(function (b) { b.classList.remove('active'); });
+                if (btn) btn.classList.add('active');
+                setStatus('Cannot rotate — ' + shipName + ' removed. Re-place it.');
+            }
+
+            renderBoard('player-grid', playerBoard, true);
+            renderRoster('player-roster', playerShips);
+        }
+    }
+
+    /**
      * Shows a preview of where the ship would be placed on hover.
+     * Only active on non-touch (desktop) devices.
      */
     function handlePlacementHover(e) {
+        if (isTouchDevice) return; // touch uses two-tap flow instead
         if (gamePhase !== PHASE.PLACEMENT) return;
         if (isShipAlreadyPlaced(currentShipIndex) && findNextUnplacedShip() === -1) return;
 
@@ -1172,8 +1454,14 @@
         gamePhase = PHASE.BATTLE;
         isPlayerTurn = true;
 
+        // Clear any pending touch preview
+        clearPendingPreview();
+
         // Hide placement controls
         placementControls.style.display = 'none';
+
+        // Mobile: switch to showing enemy board
+        updateMobileBoardVisibility();
 
         // AI places ships randomly
         enemyShips = placeShipsRandomly(enemyBoard);
@@ -1524,6 +1812,9 @@
     function endGame(playerWon) {
         gamePhase = PHASE.GAME_OVER;
 
+        // Mobile: show both boards at game end
+        updateMobileBoardVisibility();
+
         if (playerWon) {
             wins++;
             winCountEl.textContent = wins;
@@ -1565,8 +1856,15 @@
 
         // Reset UI
         placementControls.style.display = 'flex';
+        // On mobile use grid layout; on desktop use flex
+        if (window.innerWidth <= 480) {
+            placementControls.style.display = 'grid';
+        }
         restartBtn.style.display = 'none';
         orientationBtn.textContent = 'Horizontal';
+
+        // Clear pending touch state
+        pendingPlacement = null;
 
         // Reset ship buttons
         shipButtons.forEach(function (btn) {
@@ -1585,6 +1883,9 @@
 
         setStatus('Place your ' + SHIPS[0].name + ' (' + SHIPS[0].size + ' cells)');
         statusBar.className = '';
+
+        // Mobile: show player board during placement
+        updateMobileBoardVisibility();
     }
 
     // ============================================================
@@ -1604,6 +1905,27 @@
         } else {
             statusBar.className = '';
         }
+    }
+
+    /**
+     * On mobile (≤480px) show only one board at a time:
+     *   - PLACEMENT  → player board
+     *   - BATTLE     → enemy board
+     *   - GAME_OVER  → both (remove single-board class)
+     */
+    function updateMobileBoardVisibility() {
+        const container = document.getElementById('boards-container');
+        container.classList.remove('show-player', 'show-enemy');
+
+        // Only apply on narrow viewports
+        if (window.innerWidth > 480) return;
+
+        if (gamePhase === PHASE.PLACEMENT) {
+            container.classList.add('show-player');
+        } else if (gamePhase === PHASE.BATTLE) {
+            container.classList.add('show-enemy');
+        }
+        // GAME_OVER: no class → both boards visible
     }
 
     // ============================================================
@@ -1656,7 +1978,13 @@
         setStatus('Place your ' + SHIPS[0].name + ' (' + SHIPS[0].size + ' cells)');
     }
 
+    // Listen for orientation/resize changes to update mobile board visibility
+    window.addEventListener('resize', updateMobileBoardVisibility);
+
     init();
+
+    // Apply mobile board visibility on load
+    updateMobileBoardVisibility();
 
 })();
 </script>
