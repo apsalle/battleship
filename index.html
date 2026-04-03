@@ -1388,6 +1388,8 @@
         if (gamePhase !== PHASE.PLACEMENT) return;
         isHorizontal = !isHorizontal;
         orientationBtn.textContent = isHorizontal ? 'Horizontal' : 'Vertical';
+        // Clear any pending touch preview so it doesn't mismatch the new orientation
+        clearPendingPreview();
     }
 
     /**
@@ -1425,6 +1427,9 @@
      */
     function resetPlacement() {
         if (gamePhase !== PHASE.PLACEMENT) return;
+
+        // Clear any stale pending touch preview
+        clearPendingPreview();
 
         playerBoard = createBoard();
         playerShips = [];
