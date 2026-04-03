@@ -398,9 +398,13 @@
     }
 
     /* vw-based cell sizing so 10x10 grid fits any phone */
-    .grid {
+    /* Define custom properties on .grid-wrapper so overlays (siblings of .grid) can inherit them */
+    .grid-wrapper {
       --cell-size: calc((100vw - 40px) / 11);
       --label-size: calc(var(--cell-size) * 0.8);
+    }
+
+    .grid {
       grid-template-columns: var(--label-size) repeat(10, var(--cell-size));
       grid-template-rows: var(--label-size) repeat(10, var(--cell-size));
     }
