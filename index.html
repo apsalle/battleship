@@ -1062,6 +1062,9 @@
 
         currentShipIndex = idx;
 
+        // Clear any stale pending touch preview (ship size may differ)
+        clearPendingPreview();
+
         // Update active button styling
         shipButtons.forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
@@ -1138,6 +1141,7 @@
 
         // --- Tap on an already-placed ship: try in-place rotate, else remove ---
         if (playerBoard[row][col].state === CELL.SHIP && playerBoard[row][col].ship) {
+            clearPendingPreview();
             tryRotateOrRemoveShip(row, col);
             return;
         }
