@@ -267,21 +267,6 @@
     background: #B8AEE0;
   }
 
-  .placement-legend {
-    margin-top: 16px;
-    font-size: 0.82rem;
-    color: #6B4FA0;
-    line-height: 1.8;
-    text-align: left;
-    background: #EDE8FA;
-    border-radius: 8px;
-    padding: 10px 14px;
-    max-width: 440px;
-  }
-
-  .placement-legend div {
-    white-space: nowrap;
-  }
 
   .placement-info {
     margin-top: 8px;
@@ -330,9 +315,10 @@
 
   .controls {
     display: flex;
+    flex-direction: row;
     gap: 12px;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     margin-top: 8px;
   }
@@ -349,7 +335,7 @@
 <body>
 
 <h1>Battleship</h1>
-<div class="status-bar" id="statusBar">Place your ships to begin.</div>
+<div class="status-bar" id="statusBar"></div>
 
 <div class="controls" id="topControls">
   <button class="btn start-btn" id="startBtn" disabled>Start Battle</button>
@@ -364,12 +350,6 @@
     </div>
     <div class="placement-info" id="placementInfo">Placing: Carrier (5)</div>
     <div class="ship-roster" id="playerRoster"></div>
-    <div class="placement-legend" id="placementLegend">
-      <div>&#128433;&#65039; Left click &mdash; place horizontally</div>
-      <div>&#128433;&#65039; Right click &mdash; place vertically</div>
-      <div>&#128433;&#65039; Click placed ship &mdash; remove &amp; reposition</div>
-      <div>&#128433;&#65039; Double click &mdash; randomize all ships</div>
-    </div>
   </div>
 
   <!-- Enemy Board -->
@@ -424,7 +404,7 @@
   const enemyGridEl = document.getElementById('enemyGrid');
   const statusBar = document.getElementById('statusBar');
   const placementInfo = document.getElementById('placementInfo');
-  const placementLegend = document.getElementById('placementLegend');
+  // placementLegend is now rendered inside statusBar via showLegendInStatusBar()
   const playerRoster = document.getElementById('playerRoster');
   const enemyRoster = document.getElementById('enemyRoster');
   const startBtn = document.getElementById('startBtn');
@@ -446,9 +426,19 @@
     }));
   }
 
+  const LEGEND_TEXT = '\uD83D\uDD91\uFE0F Left click \u2014 horizontal  \u00B7  ' +
+    '\uD83D\uDD91\uFE0F Right click \u2014 vertical  \u00B7  ' +
+    '\uD83D\uDD91\uFE0F Click ship \u2014 reposition  \u00B7  ' +
+    '\uD83D\uDD91\uFE0F Double click \u2014 randomize';
+
   function setStatus(msg, cssClass) {
     statusBar.textContent = msg;
     statusBar.className = 'status-bar' + (cssClass ? ' ' + cssClass : '');
+  }
+
+  function showLegendInStatusBar() {
+    statusBar.textContent = LEGEND_TEXT;
+    statusBar.className = 'status-bar';
   }
 
   function getShipCells(row, col, size, horizontal) {
@@ -668,6 +658,7 @@
     placeShipOnBoard(playerBoard, playerShips[currentShipIndex], row, col, horizontal);
     currentShipIndex = findNextUnplacedShip();
     updatePlacementInfo();
+    setStatus('Placing: ' + (currentShipIndex < SHIPS.length ? SHIPS[currentShipIndex].name + ' (' + SHIPS[currentShipIndex].size + ')' : 'All ships placed!'));
     renderAll();
     checkStartReady();
   }
@@ -683,6 +674,7 @@
     placeShipsRandomly(playerBoard, playerShips, 0);
     currentShipIndex = SHIPS.length;
     updatePlacementInfo();
+    setStatus('All ships placed! Click Start Battle to begin.');
     renderAll();
     checkStartReady();
   }
@@ -1091,7 +1083,6 @@
     bindBattleEvents();
     startBtn.classList.add('hidden');
     placementInfo.classList.add('hidden');
-    placementLegend.classList.add('hidden');
     setStatus('Battle begins! Click on enemy waters to fire.');
     renderAll();
   }
@@ -1123,9 +1114,8 @@
     startBtn.classList.remove('hidden', 'flash');
     restartBtn.classList.add('hidden');
     placementInfo.classList.remove('hidden');
-    placementLegend.classList.remove('hidden');
     updatePlacementInfo();
-    setStatus('Place your ships to begin.');
+    showLegendInStatusBar();
 
     // Remove overlays and rebuild grids
     removeOverlays();
@@ -1151,6 +1141,7 @@
     buildGridDOM(enemyGridEl, true);
     renderAll();
     updatePlacementInfo();
+    showLegendInStatusBar();
 
     bindPlacementEvents();
 
