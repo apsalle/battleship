@@ -267,27 +267,6 @@
     background: #B8AEE0;
   }
 
-  .placement-legend {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 16px;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 12px;
-    font-size: 0.82rem;
-    color: #6B4FA0;
-    line-height: 1.8;
-    text-align: center;
-    background: #EDE8FA;
-    border-radius: 8px;
-    padding: 10px 24px;
-  }
-
-  .placement-legend div {
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
 
   .placement-info {
     margin-top: 8px;
@@ -447,12 +426,10 @@
     }));
   }
 
-  const LEGEND_HTML = '<div class="placement-legend">' +
-    '<div>\uD83D\uDD91\uFE0F Left click \u2014 place horizontally</div>' +
-    '<div>\uD83D\uDD91\uFE0F Right click \u2014 place vertically</div>' +
-    '<div>\uD83D\uDD91\uFE0F Click placed ship \u2014 remove &amp; reposition</div>' +
-    '<div>\uD83D\uDD91\uFE0F Double click \u2014 randomize all ships</div>' +
-    '</div>';
+  const LEGEND_TEXT = '\uD83D\uDD91\uFE0F Left click \u2014 horizontal  \u00B7  ' +
+    '\uD83D\uDD91\uFE0F Right click \u2014 vertical  \u00B7  ' +
+    '\uD83D\uDD91\uFE0F Click ship \u2014 reposition  \u00B7  ' +
+    '\uD83D\uDD91\uFE0F Double click \u2014 randomize';
 
   function setStatus(msg, cssClass) {
     statusBar.textContent = msg;
@@ -460,7 +437,7 @@
   }
 
   function showLegendInStatusBar() {
-    statusBar.innerHTML = LEGEND_HTML;
+    statusBar.textContent = LEGEND_TEXT;
     statusBar.className = 'status-bar';
   }
 
