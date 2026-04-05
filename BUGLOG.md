@@ -4,7 +4,17 @@ This document tracks every bug encountered during development, including what th
 
 ---
 
-*No bugs logged yet for the current build. Testing in progress.*
+## Bug #7: Ship placement preview and rotation not working on mobile
+
+- **What:** On touch devices, hovering to preview ship placement doesn't work, and there's no touch-friendly interaction for the grid
+- **Cause:** Only `mouseenter`/`mouseleave` events were bound; these don't fire on touch devices
+- **Fix:** Added `touchstart`/`touchend`/`touchmove` event handlers for placement preview and ship placement on mobile; added touch handler for enemy grid firing; added orientation toggle button for mobile rotation
+
+## Bug #8: Desktop-specific instructions shown on mobile
+
+- **What:** Status messages say "click" on touch devices where there is no mouse; keyboard shortcut 'R' referenced but unavailable on mobile
+- **Cause:** All status text was hardcoded with desktop-centric language
+- **Fix:** Added device detection (`isTouchDevice`) and `actionWord()` helper; status messages now say "tap" on touch devices; added explicit hint about the orientation button for mobile users; updated legend text to be device-aware
 
 ---
 
@@ -45,3 +55,8 @@ This document tracks every bug encountered during development, including what th
 | Trophy/skull overlays on game end | |
 | Mobile responsiveness on 375px screen width | PASS |
 | Mobile responsiveness on 320px screen width | PASS |
+| Mobile: ship placement preview on touch | PASS |
+| Mobile: ship rotation via orientation button on touch | PASS |
+| Mobile: status messages say "tap" not "click" | PASS |
+| Mobile: enemy grid firing via touch | PASS |
+| Desktop: status messages still say "click" | PASS |

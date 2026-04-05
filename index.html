@@ -317,6 +317,14 @@
 
   .btn.restart-btn { margin-top: 20px; }
 
+  .btn.orient-btn {
+    background: #4A90D9;
+    font-size: 0.9rem;
+    padding: 8px 20px;
+    margin-top: 8px;
+  }
+  .btn.orient-btn:hover { background: #357ABD; }
+
   .controls {
     display: flex;
     flex-direction: row;
@@ -477,8 +485,8 @@
   <h3>How to Play</h3>
   <ul>
     <li><strong>Goal:</strong> Sink all 5 enemy ships before the AI sinks yours.</li>
-    <li><strong>Placement:</strong> Select a ship, choose orientation (left‑click = horizontal, right‑click = vertical), then click your grid. Use double‑click or press <strong>R</strong> to randomize all ships, or click a placed ship to reposition it.</li>
-    <li><strong>Battle:</strong> Click enemy grid cells to fire. Hits = 🔥, Misses = •, Sunk = 🔥 marker.</li>
+    <li><strong>Placement:</strong> Select a ship, choose orientation using the Horizontal/Vertical button (or left‑click = horizontal, right‑click = vertical on desktop), then tap or click your grid. Use double‑click or press <strong>R</strong> to randomize all ships, or tap/click a placed ship to reposition it.</li>
+    <li><strong>Battle:</strong> Tap or click enemy grid cells to fire. Hits = 🔥, Misses = •, Sunk = 🔥 marker.</li>
     <li><strong>Ships:</strong> Carrier (5), Battleship (4), Cruiser (3), Submarine (3), Destroyer (2).</li>
     <li><strong>Tip:</strong> Press <strong>R</strong> to randomize ship placement at any time during the placement phase.</li>
   </ul>
@@ -501,6 +509,7 @@
       <div class="grid" id="playerGrid"></div>
     </div>
     <div class="placement-info" id="placementInfo">Placing: Carrier (5)</div>
+    <button class="btn orient-btn" id="orientBtn">Horizontal</button>
     <div class="ship-roster" id="playerRoster"></div>
   </div>
 
@@ -551,6 +560,14 @@
   let playerTurnActive = true; // false while AI is taking its turn
   let winCount = 0;
   let lossCount = 0;
+  let placementHorizontal = true; // orientation for touch/tap placement
+
+  // === DEVICE DETECTION ===
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+  function actionWord() {
+    return isTouchDevice ? 'Tap' : 'Click';
+  }
 
 
   // === DOM REFS ===
@@ -563,6 +580,7 @@
   const enemyRoster = document.getElementById('enemyRoster');
   const startBtn = document.getElementById('startBtn');
   const restartBtn = document.getElementById('restartBtn');
+  const orientBtn = document.getElementById('orientBtn');
   const winCountEl = document.getElementById('win-count');
   const lossCountEl = document.getElementById('loss-count');
 
@@ -587,10 +605,15 @@
     }));
   }
 
-  const LEGEND_TEXT = '\uD83D\uDD91\uFE0F Left click \u2014 horizontal  \u00B7  ' +
-    '\uD83D\uDD91\uFE0F Right click \u2014 vertical  \u00B7  ' +
-    '\uD83D\uDD91\uFE0F Click ship \u2014 reposition  \u00B7  ' +
-    '\uD83D\uDD91\uFE0F Double click \u2014 randomize';
+  const LEGEND_TEXT = isTouchDevice
+    ? '\uD83D\uDD91\uFE0F Tap cell \u2014 place ship  \u00B7  ' +
+      '\uD83D\uDD91\uFE0F Use H/V button \u2014 rotate  \u00B7  ' +
+      '\uD83D\uDD91\uFE0F Tap placed ship \u2014 reposition'
+    : '\uD83D\uDD91\uFE0F Left click \u2014 place ship  \u00B7  ' +
+      '\uD83D\uDD91\uFE0F Right click \u2014 vertical  \u00B7  ' +
+      '\uD83D\uDD91\uFE0F H/V button \u2014 rotate  \u00B7  ' +
+      '\uD83D\uDD91\uFE0F Click ship \u2014 reposition  \u00B7  ' +
+      '\uD83D\uDD91\uFE0F Double click \u2014 randomize';
 
   function setStatus(msg, cssClass) {
     statusBar.textContent = msg;
@@ -745,7 +768,7 @@
     if (allShipsPlaced()) {
       startBtn.disabled = false;
       startBtn.classList.add('flash');
-      setStatus('All ships placed! Click Start Battle to begin.');
+      setStatus('All ships placed! ' + actionWord() + ' Start Battle to begin.');
     }
   }
 
@@ -835,7 +858,7 @@
     placeShipsRandomly(playerBoard, playerShips, 0);
     currentShipIndex = SHIPS.length;
     updatePlacementInfo();
-    setStatus('All ships placed! Click Start Battle to begin.');
+    setStatus('All ships placed! ' + actionWord() + ' Start Battle to begin.');
     renderAll();
     checkStartReady();
   }
@@ -1148,7 +1171,7 @@
     clickTimer = setTimeout(() => {
       clickTimer = null;
       if (!clickSuppressed) {
-        handlePlacement(row, col, true); // horizontal
+        handlePlacement(row, col, placementHorizontal); // use orientation button state
       }
     }, 250);
   }
@@ -1190,12 +1213,79 @@
     const col = parseInt(cell.dataset.col);
     lastHoverRow = row;
     lastHoverCol = col;
-    // Default preview is horizontal for left-click
-    showPreview(row, col, true);
+    // Preview uses current orientation from toggle button
+    showPreview(row, col, placementHorizontal);
   }
 
   function onPlayerGridMouseOut(e) {
     clearPreview();
+  }
+
+  // Touch event handlers for mobile placement
+  function onPlayerGridTouchStart(e) {
+    if (phase !== PHASE.PLACEMENT) return;
+    e.preventDefault(); // prevent mouse event emulation
+    const cell = e.target.closest('.cell');
+    if (!cell) {
+      lastHoverRow = -1;
+      lastHoverCol = -1;
+      clearPreview();
+      return;
+    }
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    lastHoverRow = row;
+    lastHoverCol = col;
+    showPreview(row, col, placementHorizontal);
+  }
+
+  function onPlayerGridTouchMove(e) {
+    if (phase !== PHASE.PLACEMENT) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el) return;
+    const cell = el.closest('.cell');
+    if (!cell) return;
+    // Only update if cell is inside the player grid
+    if (!playerGridEl.contains(cell)) return;
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    if (row !== lastHoverRow || col !== lastHoverCol) {
+      lastHoverRow = row;
+      lastHoverCol = col;
+      showPreview(row, col, placementHorizontal);
+    }
+  }
+
+  function onPlayerGridTouchEnd(e) {
+    if (phase !== PHASE.PLACEMENT) return;
+    e.preventDefault();
+    if (lastHoverRow >= 0 && lastHoverCol >= 0) {
+      handlePlacement(lastHoverRow, lastHoverCol, placementHorizontal);
+    }
+    clearPreview();
+  }
+
+  // Touch handler for enemy grid firing
+  function onEnemyGridTouchStart(e) {
+    if (phase !== PHASE.BATTLE) return;
+    e.preventDefault();
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    handlePlayerAttack(row, col);
+  }
+
+  // Orientation toggle handler
+  function onOrientBtnClick() {
+    placementHorizontal = !placementHorizontal;
+    orientBtn.textContent = placementHorizontal ? 'Horizontal' : 'Vertical';
+    // Update preview if hovering
+    if (lastHoverRow >= 0 && lastHoverCol >= 0 && phase === PHASE.PLACEMENT) {
+      showPreview(lastHoverRow, lastHoverCol, placementHorizontal);
+    }
   }
 
   // Enemy grid: attack phase events
@@ -1220,6 +1310,11 @@
     playerGridEl.addEventListener('dblclick', onPlayerGridDblClick);
     playerGridEl.addEventListener('mouseover', onPlayerGridMouseOver);
     playerGridEl.addEventListener('mouseout', onPlayerGridMouseOut);
+    // Touch events for mobile placement
+    playerGridEl.addEventListener('touchstart', onPlayerGridTouchStart);
+    playerGridEl.addEventListener('touchmove', onPlayerGridTouchMove);
+    playerGridEl.addEventListener('touchend', onPlayerGridTouchEnd);
+    orientBtn.addEventListener('click', onOrientBtnClick);
   }
 
   function unbindPlacementEvents() {
@@ -1228,15 +1323,22 @@
     playerGridEl.removeEventListener('dblclick', onPlayerGridDblClick);
     playerGridEl.removeEventListener('mouseover', onPlayerGridMouseOver);
     playerGridEl.removeEventListener('mouseout', onPlayerGridMouseOut);
+    // Remove touch events
+    playerGridEl.removeEventListener('touchstart', onPlayerGridTouchStart);
+    playerGridEl.removeEventListener('touchmove', onPlayerGridTouchMove);
+    playerGridEl.removeEventListener('touchend', onPlayerGridTouchEnd);
+    orientBtn.removeEventListener('click', onOrientBtnClick);
     clearPreview();
   }
 
   function bindBattleEvents() {
     enemyGridEl.addEventListener('click', onEnemyGridClick);
+    enemyGridEl.addEventListener('touchstart', onEnemyGridTouchStart);
   }
 
   function unbindBattleEvents() {
     enemyGridEl.removeEventListener('click', onEnemyGridClick);
+    enemyGridEl.removeEventListener('touchstart', onEnemyGridTouchStart);
   }
 
   // === GAME FLOW ===
@@ -1248,7 +1350,8 @@
     bindBattleEvents();
     startBtn.classList.add('hidden');
     placementInfo.classList.add('hidden');
-    setStatus('Battle begins! Click on enemy waters to fire.');
+    orientBtn.classList.add('hidden');
+    setStatus('Battle begins! ' + actionWord() + ' on enemy waters to fire.');
     renderAll();
   }
 
@@ -1267,6 +1370,9 @@
     clickTimer = null;
     clickSuppressed = false;
     playerTurnActive = true;
+    placementHorizontal = true;
+    lastHoverRow = -1;
+    lastHoverCol = -1;
 
     // Place enemy ships randomly
     placeShipsRandomly(enemyBoard, enemyShips, 0);
@@ -1279,6 +1385,8 @@
     startBtn.classList.remove('hidden', 'flash');
     restartBtn.classList.add('hidden');
     placementInfo.classList.remove('hidden');
+    orientBtn.classList.remove('hidden');
+    orientBtn.textContent = 'Horizontal';
     updatePlacementInfo();
     showLegendInStatusBar();
 
