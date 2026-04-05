@@ -1170,7 +1170,7 @@
     clickTimer = setTimeout(() => {
       clickTimer = null;
       if (!clickSuppressed) {
-        handlePlacement(row, col, true); // horizontal
+        handlePlacement(row, col, placementHorizontal); // use orientation button state
       }
     }, 250);
   }
@@ -1212,8 +1212,8 @@
     const col = parseInt(cell.dataset.col);
     lastHoverRow = row;
     lastHoverCol = col;
-    // Default preview is horizontal for left-click
-    showPreview(row, col, true);
+    // Preview uses current orientation from toggle button
+    showPreview(row, col, placementHorizontal);
   }
 
   function onPlayerGridMouseOut(e) {
