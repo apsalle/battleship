@@ -1226,7 +1226,12 @@
     if (phase !== PHASE.PLACEMENT) return;
     e.preventDefault(); // prevent mouse event emulation
     const cell = e.target.closest('.cell');
-    if (!cell) return;
+    if (!cell) {
+      lastHoverRow = -1;
+      lastHoverCol = -1;
+      clearPreview();
+      return;
+    }
     const row = parseInt(cell.dataset.row);
     const col = parseInt(cell.dataset.col);
     lastHoverRow = row;
