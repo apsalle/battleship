@@ -576,7 +576,7 @@
   <h3>How to Play</h3>
   <ul>
     <li><strong>Goal:</strong> Sink all 5 enemy ships before the AI sinks yours.</li>
-    <li><strong>Placement:</strong> Select a ship, choose orientation using the Horizontal/Vertical button (or left‑click = horizontal, right‑click = vertical on desktop), then tap or click your grid. Use double‑click or press <strong>R</strong> to randomize all ships, or tap/click a placed ship to reposition it.</li>
+    <li><strong>Placement:</strong> Select a ship, choose orientation using the Horizontal/Vertical button (or right‑click to toggle orientation on desktop), then tap or click your grid. Use double‑click or press <strong>R</strong> to randomize all ships, or tap/click a placed ship to reposition it.</li>
     <li><strong>Battle:</strong> Tap or click enemy grid cells to fire. Hits = 🔥, Misses = •, Sunk = 🔥marker.</li>
     <li><strong>Ships:</strong> Carrier (5), Battleship (4), Cruiser (3), Submarine (3), Destroyer (2).</li>
     <li><strong>Tip:</strong> Press <strong>R</strong> to randomize ship placement at any time during the placement phase.</li>
@@ -700,6 +700,8 @@
       placed: false,
     }));
   }
+
+  function actionWord() { return isTouchDevice ? 'Tap' : 'Click'; }
 
   const LEGEND_TEXT = isTouchDevice
     ? '\uD83D\uDC46 Tap to preview \u00B7 Tap again to place \u00B7 Tap placed ship to rotate'
@@ -891,7 +893,7 @@
     if (allShipsPlaced()) {
       startBtn.disabled = false;
       startBtn.classList.add('flash');
-      setStatus('All ships placed! Click Start Battle to begin.');
+      setStatus('All ships placed! ' + actionWord() + ' Start Battle to begin.');
     }
   }
 
@@ -1026,7 +1028,7 @@
     pendingPlacement = null;
     clearPreview();
     updatePlacementInfo();
-    setStatus('All ships placed! Click Start Battle to begin.');
+    setStatus('All ships placed! ' + actionWord() + ' Start Battle to begin.');
     renderAll();
     checkStartReady();
   }
@@ -1484,7 +1486,7 @@
     orientBtn.classList.add('hidden');
     randomizeBtn.classList.add('hidden');
     placementInfo.classList.add('hidden');
-    setStatus('Battle begins! Click on enemy waters to fire.');
+    setStatus('Battle begins! ' + actionWord() + ' on enemy waters to fire.');
     updateBoardVisibility();
     renderAll();
   }
@@ -1504,6 +1506,8 @@
     playerTurnActive = true;
     pendingPlacement = null;
     placementHorizontal = true;
+    lastHoverRow = -1;
+    lastHoverCol = -1;
     updateOrientBtn();
 
     placeShipsRandomly(enemyBoard, enemyShips, 0);
