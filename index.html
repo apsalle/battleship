@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Battleship</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,8 +19,6 @@
     flex-direction: column;
     align-items: center;
     padding: 24px 16px;
-    max-width: 100%;
-    overflow-x: hidden;
   }
 
   h1 {
@@ -114,7 +112,6 @@
     cursor: pointer;
     position: relative;
     transition: background 0.15s;
-    touch-action: manipulation;
   }
 
   .cell:hover { background: #DDD6F0; }
@@ -292,7 +289,6 @@
     color: #fff;
     transition: background 0.2s;
     margin-top: 16px;
-    touch-action: manipulation;
   }
 
   .btn:hover { background: #6B4FA0; }
@@ -316,14 +312,6 @@
   }
 
   .btn.restart-btn { margin-top: 20px; }
-
-  .btn.orient-btn {
-    background: #4A90D9;
-    font-size: 0.9rem;
-    padding: 8px 20px;
-    margin-top: 8px;
-  }
-  .btn.orient-btn:hover { background: #357ABD; }
 
   .controls {
     display: flex;
@@ -413,66 +401,169 @@
 
   .hidden { display: none !important; }
 
+  /* Orientation toggle button */
+  .btn.orient-btn {
+    background: #9B8EC4;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+  .btn.orient-btn:hover { background: #6B4FA0; }
+
+  /* Randomize button */
+  .btn.randomize-btn {
+    background: #9B8EC4;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+  .btn.randomize-btn:hover { background: #6B4FA0; }
+
+  /* === RESPONSIVE: Tablet === */
   @media (max-width: 900px) {
     .boards-container { flex-direction: column; gap: 32px; }
     h1 { font-size: 2rem; }
   }
 
-  @media (max-width: 600px) {
-    body { padding: 14px; }
-    .grid {
-      grid-template-columns: 28px repeat(10, 28px);
-      grid-template-rows: 28px repeat(10, 28px);
+  /* === RESPONSIVE: Mobile (max-width: 480px) === */
+  @media (max-width: 480px) {
+    body {
+      padding: 12px 4px;
     }
-    .grid .corner { width: 28px; height: 28px; }
-    .grid .col-label { width: 28px; height: 28px; }
-    .grid .row-label { width: 28px; height: 28px; }
-    .cell { width: 28px; height: 28px; }
-    .trophy-overlay, .skull-overlay {
-      top: 28px; left: 28px;
-      width: 280px; height: 280px;
-    }
-    .controls .btn { padding: 6px 12px; }
-  }
 
-  @media (max-width: 420px) {
-    body { padding: 10px; }
-    h1 { font-size: 1.4rem; }
-    .grid {
-      grid-template-columns: 24px repeat(10, 24px);
-      grid-template-rows: 24px repeat(10, 24px);
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
     }
-    .grid .corner { width: 24px; height: 24px; }
-    .grid .col-label { width: 24px; height: 24px; }
-    .grid .row-label { width: 24px; height: 24px; font-size: 0.7rem; }
-    .cell { width: 24px; height: 24px; }
-    .trophy-overlay, .skull-overlay {
-      top: 24px; left: 24px;
-      width: 240px; height: 240px;
-    }
-    .boards-container { gap: 10px; }
-    .controls { gap: 6px; }
-    .controls .btn { padding: 6px 10px; font-size: 0.75rem; }
-    .status-bar { font-size: 0.85rem; padding: 8px 12px; }
-    h2 { font-size: 0.9rem; }
-    #score-tracker { gap: 15px; font-size: 0.8rem; }
-    .score-item { padding: 4px 10px; }
-    .btn.restart-btn { padding: 10px 24px; font-size: 0.9rem; }
-  }
 
-  @media (max-width: 350px) {
-    body { padding: 6px; }
-    .grid {
-      grid-template-columns: 22px repeat(10, 22px);
-      grid-template-rows: 22px repeat(10, 22px);
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
     }
-    .grid .corner { width: 22px; height: 22px; }
-    .grid .col-label { width: 22px; height: 22px; }
-    .grid .row-label { width: 22px; height: 22px; }
-    .cell { width: 22px; height: 22px; }
-    .trophy-overlay, .skull-overlay {
-      top: 22px; left: 22px;
-      width: 220px; height: 220px;
+
+    .status-bar {
+      font-size: 0.85rem;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      min-height: 36px;
+    }
+
+    #score-tracker {
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+    }
+    .score-item {
+      padding: 4px 10px;
+    }
+
+    /* vw-based cell sizing so 10x10 grid fits any phone */
+    /* Define custom properties on .grid-wrapper so overlays (siblings of .grid) can inherit them */
+    .grid-wrapper {
+      --cell-size: calc((100vw - 40px) / 11);
+      --label-size: calc(var(--cell-size) * 0.8);
+    }
+
+    .grid {
+      grid-template-columns: var(--label-size) repeat(10, var(--cell-size));
+      grid-template-rows: var(--label-size) repeat(10, var(--cell-size));
+    }
+
+    .grid .corner {
+      width: var(--label-size);
+      height: var(--label-size);
+    }
+
+    .grid .col-label {
+      width: var(--cell-size);
+      height: var(--label-size);
+      font-size: 0.65rem;
+    }
+
+    .grid .row-label {
+      width: var(--label-size);
+      height: var(--cell-size);
+      font-size: 0.65rem;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+    }
+
+    .cell.hit::after,
+    .cell.sunk::after {
+      font-size: 0.9rem;
+    }
+
+    .cell.miss::after {
+      font-size: 1.4rem;
+    }
+
+    /* Trophy/skull overlays scale to grid */
+    .trophy-overlay,
+    .skull-overlay {
+      top: var(--label-size, 32px);
+      left: var(--label-size, 32px);
+      width: calc(var(--cell-size) * 10);
+      height: calc(var(--cell-size) * 10);
+      font-size: 5rem;
+    }
+
+    /* Single-board view on mobile */
+    .boards-container {
+      gap: 16px;
+    }
+
+    .boards-container.mobile-placement .board-section:nth-child(2) {
+      display: none;
+    }
+
+    .boards-container.mobile-battle .board-section:nth-child(1) {
+      display: none;
+    }
+
+    .boards-container.mobile-gameover .board-section {
+      display: flex;
+    }
+
+    /* Placement controls stack into 2-column grid */
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+      padding: 0 8px;
+    }
+
+    .controls .btn {
+      margin-top: 8px;
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    /* Start button spans full width */
+    .controls .btn.start-btn {
+      grid-column: 1 / -1;
+      font-size: 1rem;
+      padding: 12px 24px;
+    }
+
+    .btn.restart-btn {
+      font-size: 0.95rem;
+      padding: 10px 24px;
+    }
+
+    .placement-info {
+      font-size: 0.8rem;
+    }
+
+    .ship-roster {
+      font-size: 0.75rem;
+    }
+
+    .ship-roster-item .pip {
+      width: 8px;
+      height: 8px;
     }
   }
 </style>
@@ -486,7 +577,7 @@
   <ul>
     <li><strong>Goal:</strong> Sink all 5 enemy ships before the AI sinks yours.</li>
     <li><strong>Placement:</strong> Select a ship, choose orientation using the Horizontal/Vertical button (or left‑click = horizontal, right‑click = vertical on desktop), then tap or click your grid. Use double‑click or press <strong>R</strong> to randomize all ships, or tap/click a placed ship to reposition it.</li>
-    <li><strong>Battle:</strong> Tap or click enemy grid cells to fire. Hits = 🔥, Misses = •, Sunk = 🔥 marker.</li>
+    <li><strong>Battle:</strong> Tap or click enemy grid cells to fire. Hits = 🔥, Misses = •, Sunk = 🔥marker.</li>
     <li><strong>Ships:</strong> Carrier (5), Battleship (4), Cruiser (3), Submarine (3), Destroyer (2).</li>
     <li><strong>Tip:</strong> Press <strong>R</strong> to randomize ship placement at any time during the placement phase.</li>
   </ul>
@@ -498,10 +589,12 @@
 <div class="status-bar" id="statusBar"></div>
 
 <div class="controls" id="topControls">
+  <button class="btn orient-btn" id="orientBtn">Horizontal &#x2194;</button>
+  <button class="btn randomize-btn" id="randomizeBtn">Randomize</button>
   <button class="btn start-btn" id="startBtn" disabled>Start Battle</button>
 </div>
 
-<div class="boards-container">
+<div class="boards-container" id="boardsContainer">
   <!-- Player Board -->
   <div class="board-section">
     <h2>Your Fleet</h2>
@@ -509,7 +602,6 @@
       <div class="grid" id="playerGrid"></div>
     </div>
     <div class="placement-info" id="placementInfo">Placing: Carrier (5)</div>
-    <button class="btn orient-btn" id="orientBtn">Horizontal</button>
     <div class="ship-roster" id="playerRoster"></div>
   </div>
 
@@ -545,6 +637,9 @@
   const PHASE = { PLACEMENT: 'PLACEMENT', BATTLE: 'BATTLE', GAME_OVER: 'GAME_OVER' };
   const CELL = { EMPTY: 0, SHIP: 1, HIT: 2, MISS: 3, SUNK: 4 };
 
+  // === TOUCH DETECTION ===
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
   // === STATE ===
   let phase = PHASE.PLACEMENT;
   let playerBoard = [];
@@ -554,20 +649,19 @@
   let currentShipIndex = 0;
   let aiState = {};
 
+  // Orientation state for placement
+  let placementHorizontal = true;
+
+  // Pending placement for touch two-tap flow
+  // { row, col } or null
+  let pendingPlacement = null;
+
   // Double-click guard: suppress single-click events that precede a dblclick
   let clickTimer = null;
   let clickSuppressed = false;
   let playerTurnActive = true; // false while AI is taking its turn
   let winCount = 0;
   let lossCount = 0;
-  let placementHorizontal = true; // orientation for touch/tap placement
-
-  // === DEVICE DETECTION ===
-  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-
-  function actionWord() {
-    return isTouchDevice ? 'Tap' : 'Click';
-  }
 
 
   // === DOM REFS ===
@@ -575,14 +669,16 @@
   const enemyGridEl = document.getElementById('enemyGrid');
   const statusBar = document.getElementById('statusBar');
   const placementInfo = document.getElementById('placementInfo');
-  // placementLegend is now rendered inside statusBar via showLegendInStatusBar()
   const playerRoster = document.getElementById('playerRoster');
   const enemyRoster = document.getElementById('enemyRoster');
   const startBtn = document.getElementById('startBtn');
   const restartBtn = document.getElementById('restartBtn');
-  const orientBtn = document.getElementById('orientBtn');
   const winCountEl = document.getElementById('win-count');
   const lossCountEl = document.getElementById('loss-count');
+  const orientBtn = document.getElementById('orientBtn');
+  const randomizeBtn = document.getElementById('randomizeBtn');
+  const boardsContainer = document.getElementById('boardsContainer');
+  const topControls = document.getElementById('topControls');
 
   function updateScore() {
     winCountEl.textContent = winCount;
@@ -606,12 +702,9 @@
   }
 
   const LEGEND_TEXT = isTouchDevice
-    ? '\uD83D\uDD91\uFE0F Tap cell \u2014 place ship  \u00B7  ' +
-      '\uD83D\uDD91\uFE0F Use H/V button \u2014 rotate  \u00B7  ' +
-      '\uD83D\uDD91\uFE0F Tap placed ship \u2014 reposition'
+    ? '\uD83D\uDC46 Tap to preview \u00B7 Tap again to place \u00B7 Tap placed ship to rotate'
     : '\uD83D\uDD91\uFE0F Left click \u2014 place ship  \u00B7  ' +
-      '\uD83D\uDD91\uFE0F Right click \u2014 vertical  \u00B7  ' +
-      '\uD83D\uDD91\uFE0F H/V button \u2014 rotate  \u00B7  ' +
+      '\uD83D\uDD91\uFE0F Right click \u2014 toggle orientation  \u00B7  ' +
       '\uD83D\uDD91\uFE0F Click ship \u2014 reposition  \u00B7  ' +
       '\uD83D\uDD91\uFE0F Double click \u2014 randomize';
 
@@ -645,11 +738,11 @@
     cells.forEach(({ r, c }) => { board[r][c] = CELL.SHIP; });
     shipState.cells = cells;
     shipState.placed = true;
+    shipState.horizontal = horizontal;
     return true;
   }
 
   function placeShipsRandomly(board, ships, startIndex) {
-    // Place ships from startIndex onward
     for (let i = startIndex; i < ships.length; i++) {
       if (ships[i].placed) continue;
       let placed = false;
@@ -664,21 +757,51 @@
     }
   }
 
+  // === ORIENTATION TOGGLE ===
+  function updateOrientBtn() {
+    orientBtn.textContent = placementHorizontal ? 'Horizontal \u2194' : 'Vertical \u2195';
+  }
+
+  function toggleOrientation() {
+    placementHorizontal = !placementHorizontal;
+    updateOrientBtn();
+    // Re-show preview at pending/hovered position
+    if (pendingPlacement) {
+      showPreview(pendingPlacement.row, pendingPlacement.col, placementHorizontal);
+    } else if (lastHoverRow >= 0 && lastHoverCol >= 0) {
+      showPreview(lastHoverRow, lastHoverCol, placementHorizontal);
+    }
+  }
+
+  // === MOBILE BOARD VISIBILITY ===
+  function isMobile() {
+    return window.matchMedia('(max-width: 480px)').matches;
+  }
+
+  function updateBoardVisibility() {
+    boardsContainer.classList.remove('mobile-placement', 'mobile-battle', 'mobile-gameover');
+    if (!isMobile()) return;
+    if (phase === PHASE.PLACEMENT) {
+      boardsContainer.classList.add('mobile-placement');
+    } else if (phase === PHASE.BATTLE) {
+      boardsContainer.classList.add('mobile-battle');
+    } else if (phase === PHASE.GAME_OVER) {
+      boardsContainer.classList.add('mobile-gameover');
+    }
+  }
+
   // === GRID RENDERING ===
   function buildGridDOM(gridEl, isEnemy) {
     gridEl.innerHTML = '';
-    // corner
     const corner = document.createElement('div');
     corner.className = 'corner';
     gridEl.appendChild(corner);
-    // col labels
     for (let c = 0; c < GRID_SIZE; c++) {
       const lbl = document.createElement('div');
       lbl.className = 'col-label';
       lbl.textContent = COL_LABELS[c];
       gridEl.appendChild(lbl);
     }
-    // rows
     for (let r = 0; r < GRID_SIZE; r++) {
       const rowLbl = document.createElement('div');
       rowLbl.className = 'row-label';
@@ -757,7 +880,7 @@
     for (let i = 0; i < playerShips.length; i++) {
       if (!playerShips[i].placed) return i;
     }
-    return SHIPS.length; // all placed
+    return SHIPS.length;
   }
 
   function allShipsPlaced() {
@@ -768,45 +891,43 @@
     if (allShipsPlaced()) {
       startBtn.disabled = false;
       startBtn.classList.add('flash');
-      setStatus('All ships placed! ' + actionWord() + ' Start Battle to begin.');
+      setStatus('All ships placed! Click Start Battle to begin.');
     }
+  }
+
+  // Find which ship occupies a cell, return { ship, index } or null
+  function findShipAtCell(row, col) {
+    for (let i = 0; i < playerShips.length; i++) {
+      const s = playerShips[i];
+      if (!s.placed) continue;
+      for (let j = 0; j < s.cells.length; j++) {
+        if (s.cells[j].r === row && s.cells[j].c === col) {
+          return { ship: s, index: i };
+        }
+      }
+    }
+    return null;
   }
 
   function removeShipAtCell(row, col) {
     if (playerBoard[row][col] !== CELL.SHIP) return false;
 
-    // Find which ship occupies this cell
-    var targetShip = null;
-    var targetIndex = -1;
-    for (var i = 0; i < playerShips.length; i++) {
-      var s = playerShips[i];
-      if (!s.placed) continue;
-      for (var j = 0; j < s.cells.length; j++) {
-        if (s.cells[j].r === row && s.cells[j].c === col) {
-          targetShip = s;
-          targetIndex = i;
-          break;
-        }
-      }
-      if (targetShip) break;
-    }
-    if (!targetShip) return false;
+    const found = findShipAtCell(row, col);
+    if (!found) return false;
+    const targetShip = found.ship;
+    const targetIndex = found.index;
 
-    // Clear the ship's cells from the board
     targetShip.cells.forEach(function(pos) {
       playerBoard[pos.r][pos.c] = CELL.EMPTY;
     });
 
-    // Reset ship state
     targetShip.cells = [];
     targetShip.placed = false;
     targetShip.hits = 0;
     targetShip.sunk = false;
 
-    // Select this ship for re-placement
     currentShipIndex = targetIndex;
 
-    // Disable start button since not all ships are placed
     startBtn.disabled = true;
     startBtn.classList.remove('flash');
 
@@ -816,12 +937,59 @@
     return true;
   }
 
+  // Tap-to-rotate: remove ship and re-place with opposite orientation
+  function rotateShipAtCell(row, col) {
+    if (playerBoard[row][col] !== CELL.SHIP) return false;
+
+    const found = findShipAtCell(row, col);
+    if (!found) return false;
+    const targetShip = found.ship;
+    const targetIndex = found.index;
+
+    // Get ship's origin (first cell) and current orientation
+    const originR = targetShip.cells[0].r;
+    const originC = targetShip.cells[0].c;
+    const currentHorizontal = targetShip.horizontal !== undefined ? targetShip.horizontal : (
+      targetShip.cells.length > 1 ? targetShip.cells[0].r === targetShip.cells[1].r : true
+    );
+    const newHorizontal = !currentHorizontal;
+
+    // Clear existing cells
+    targetShip.cells.forEach(function(pos) {
+      playerBoard[pos.r][pos.c] = CELL.EMPTY;
+    });
+
+    // Try placing with new orientation
+    const newCells = getShipCells(originR, originC, targetShip.size, newHorizontal);
+    if (canPlaceShip(playerBoard, newCells)) {
+      newCells.forEach(function(pos) { playerBoard[pos.r][pos.c] = CELL.SHIP; });
+      targetShip.cells = newCells;
+      targetShip.horizontal = newHorizontal;
+      renderAll();
+      setStatus(targetShip.name + ' rotated to ' + (newHorizontal ? 'horizontal' : 'vertical') + '!');
+      return true;
+    } else {
+      // Can't rotate — put it back
+      targetShip.cells = getShipCells(originR, originC, targetShip.size, currentHorizontal);
+      targetShip.cells.forEach(function(pos) { playerBoard[pos.r][pos.c] = CELL.SHIP; });
+      renderAll();
+      setStatus('Cannot rotate ' + targetShip.name + ' there — not enough room.');
+      return false;
+    }
+  }
+
   function handlePlacement(row, col, horizontal) {
     if (phase !== PHASE.PLACEMENT) return;
 
-    // If clicked cell has a placed ship, remove it for re-placement
+    // If clicked cell has a placed ship, handle based on device type
     if (playerBoard[row][col] === CELL.SHIP) {
-      removeShipAtCell(row, col);
+      if (isTouchDevice) {
+        // On touch: tap a placed ship to rotate it
+        rotateShipAtCell(row, col);
+      } else {
+        // On desktop: click to remove for re-placement
+        removeShipAtCell(row, col);
+      }
       return;
     }
 
@@ -840,6 +1008,7 @@
     }
 
     placeShipOnBoard(playerBoard, playerShips[currentShipIndex], row, col, horizontal);
+    pendingPlacement = null;
     currentShipIndex = findNextUnplacedShip();
     updatePlacementInfo();
     setStatus('Placing: ' + (currentShipIndex < SHIPS.length ? SHIPS[currentShipIndex].name + ' (' + SHIPS[currentShipIndex].size + ')' : 'All ships placed!'));
@@ -850,15 +1019,14 @@
   function handleRandomizeAll() {
     if (phase !== PHASE.PLACEMENT) return;
 
-    // Clear all unplaced ships and re-randomize them
-    // Actually, clear ALL ships and re-place randomly for simplicity
-    // Reset board and ship states
     playerBoard = createBoard();
     playerShips = createShipState();
     placeShipsRandomly(playerBoard, playerShips, 0);
     currentShipIndex = SHIPS.length;
+    pendingPlacement = null;
+    clearPreview();
     updatePlacementInfo();
-    setStatus('All ships placed! ' + actionWord() + ' Start Battle to begin.');
+    setStatus('All ships placed! Click Start Battle to begin.');
     renderAll();
     checkStartReady();
   }
@@ -882,7 +1050,7 @@
     const valid = canPlaceShip(playerBoard, cells);
     cells.forEach(({ r, c }) => {
       if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
-        const cellEl = playerGridEl.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+        const cellEl = playerGridEl.querySelector('.cell[data-row="' + r + '"][data-col="' + c + '"]');
         if (cellEl) {
           cellEl.classList.add(valid ? 'preview-valid' : 'preview-invalid');
           previewCells.push(cellEl);
@@ -901,7 +1069,6 @@
     }
     if (board[row][col] === CELL.SHIP) {
       board[row][col] = CELL.HIT;
-      // Find which ship
       for (const ship of ships) {
         const idx = ship.cells.findIndex(c => c.r === row && c.c === col);
         if (idx !== -1) {
@@ -926,7 +1093,7 @@
 
   function handlePlayerAttack(row, col) {
     if (phase !== PHASE.BATTLE) return;
-    if (!playerTurnActive) return; // ignore clicks during AI turn
+    if (!playerTurnActive) return;
 
     const result = processAttack(enemyBoard, enemyShips, row, col);
     if (result === 'already') {
@@ -953,10 +1120,10 @@
       showTrophy(playerGridEl);
       showSkull(enemyGridEl);
       restartBtn.classList.remove('hidden');
+      updateBoardVisibility();
       return;
     }
 
-    // AI turn after a short delay
     playerTurnActive = false;
     setTimeout(() => {
       aiTurn();
@@ -969,7 +1136,7 @@
   // === AI LOGIC (Hunt/Target) ===
   function initAI() {
     aiState = {
-      mode: 'hunt', // 'hunt' or 'target'
+      mode: 'hunt',
       targetQueue: [],
       hitStack: [],
       triedCells: new Set(),
@@ -984,7 +1151,6 @@
     let row, col;
 
     if (aiState.mode === 'target' && aiState.targetQueue.length > 0) {
-      // Target mode: attack adjacent cells from previous hits
       let found = false;
       while (aiState.targetQueue.length > 0 && !found) {
         const target = aiState.targetQueue.shift();
@@ -996,14 +1162,12 @@
         }
       }
       if (!found) {
-        // Fall back to hunt mode
         aiState.mode = 'hunt';
         aiState.hitStack = [];
       }
     }
 
     if (aiState.mode === 'hunt' || row === undefined) {
-      // Hunt mode: pick random untried cell using parity
       const untried = [];
       for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
@@ -1012,7 +1176,6 @@
           }
         }
       }
-      // If no parity cells left, try all
       if (untried.length === 0) {
         for (let r = 0; r < GRID_SIZE; r++) {
           for (let c = 0; c < GRID_SIZE; c++) {
@@ -1040,9 +1203,7 @@
       setStatus('AI hit your ship at ' + COL_LABELS[col] + (row + 1) + '!', 'hit');
     } else if (result.startsWith('sunk:')) {
       const shipName = result.split(':')[1];
-      // Clear target queue and hit stack for the sunk ship
       aiState.hitStack = aiState.hitStack.filter(h => {
-        // Keep hits that aren't part of the sunk ship
         const sunkShip = playerShips.find(s => s.name === shipName);
         return !sunkShip.cells.some(c => c.r === h.r && c.c === h.c);
       });
@@ -1050,7 +1211,6 @@
         aiState.mode = 'hunt';
         aiState.targetQueue = [];
       } else {
-        // Re-prioritize targets around remaining hits
         aiState.targetQueue = [];
         aiState.hitStack.forEach(h => addAdjacentTargets(h.r, h.c));
       }
@@ -1067,6 +1227,7 @@
       showTrophy(enemyGridEl);
       showSkull(playerGridEl);
       restartBtn.classList.remove('hidden');
+      updateBoardVisibility();
       return;
     }
   }
@@ -1079,12 +1240,10 @@
       { r: row, c: col + 1 },
     ];
 
-    // If we have 2+ hits in a line, prioritize continuing the line
     if (aiState.hitStack.length >= 2) {
       const last = aiState.hitStack[aiState.hitStack.length - 1];
       const prev = aiState.hitStack[aiState.hitStack.length - 2];
       if (last.r === prev.r) {
-        // Horizontal line - prioritize left/right
         const prioritized = dirs.sort((a, b) => {
           const aIsHoriz = a.r === row;
           const bIsHoriz = b.r === row;
@@ -1099,7 +1258,6 @@
         });
         return;
       } else if (last.c === prev.c) {
-        // Vertical line - prioritize up/down
         const prioritized = dirs.sort((a, b) => {
           const aIsVert = a.c === col;
           const bIsVert = b.c === col;
@@ -1127,7 +1285,6 @@
 
   // === TROPHY OVERLAY ===
   function showTrophy(gridEl) {
-    // Remove any existing trophy
     removeOverlays();
     const wrapper = gridEl.closest('.grid-wrapper');
     const overlay = document.createElement('div');
@@ -1150,19 +1307,63 @@
 
   // === EVENT HANDLERS ===
 
-  // Player grid: placement phase events
+  // --- TOUCH HANDLERS (two-tap flow) ---
+  function onPlayerGridTouch(e) {
+    e.preventDefault(); // prevent mouse emulation
+    const touch = e.changedTouches[0];
+    const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!cell || !cell.classList.contains('cell')) return;
+    if (phase !== PHASE.PLACEMENT) return;
+
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+
+    // If tapped a placed ship, rotate it
+    if (playerBoard[row][col] === CELL.SHIP) {
+      pendingPlacement = null;
+      clearPreview();
+      rotateShipAtCell(row, col);
+      return;
+    }
+
+    if (currentShipIndex >= SHIPS.length) return;
+
+    // Two-tap flow
+    if (pendingPlacement && pendingPlacement.row === row && pendingPlacement.col === col) {
+      // Second tap on same cell — confirm placement
+      handlePlacement(row, col, placementHorizontal);
+      pendingPlacement = null;
+      clearPreview();
+    } else {
+      // First tap (or tap on different cell) — show preview
+      pendingPlacement = { row: row, col: col };
+      showPreview(row, col, placementHorizontal);
+    }
+  }
+
+  function onEnemyGridTouch(e) {
+    e.preventDefault();
+    if (phase !== PHASE.BATTLE) return;
+    const touch = e.changedTouches[0];
+    const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!cell || !cell.classList.contains('cell')) return;
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    handlePlayerAttack(row, col);
+  }
+
+  // --- DESKTOP HANDLERS ---
   function onPlayerGridClick(e) {
+    if (isTouchDevice) return; // handled by touch events
     const cell = e.target.closest('.cell');
     if (!cell) return;
     if (phase !== PHASE.PLACEMENT) return;
 
-    // Guard against double-click: delay single-click handling
     if (clickSuppressed) return;
 
     const row = parseInt(cell.dataset.row);
     const col = parseInt(cell.dataset.col);
 
-    // Use a timer to distinguish single-click from double-click
     if (clickTimer) {
       clearTimeout(clickTimer);
       clickTimer = null;
@@ -1171,28 +1372,24 @@
     clickTimer = setTimeout(() => {
       clickTimer = null;
       if (!clickSuppressed) {
-        handlePlacement(row, col, placementHorizontal); // use orientation button state
+        handlePlacement(row, col, placementHorizontal);
       }
     }, 250);
   }
 
   function onPlayerGridRightClick(e) {
-    e.preventDefault(); // Suppress context menu
+    e.preventDefault();
     e.stopPropagation();
     if (phase !== PHASE.PLACEMENT) return;
 
-    const cell = e.target.closest('.cell');
-    if (!cell) return;
-
-    const row = parseInt(cell.dataset.row);
-    const col = parseInt(cell.dataset.col);
-    handlePlacement(row, col, false); // vertical
+    // Right-click toggles orientation (like the button)
+    toggleOrientation();
   }
 
   function onPlayerGridDblClick(e) {
+    if (isTouchDevice) return;
     if (phase !== PHASE.PLACEMENT) return;
 
-    // Suppress any pending single-click
     if (clickTimer) {
       clearTimeout(clickTimer);
       clickTimer = null;
@@ -1201,37 +1398,14 @@
 
     handleRandomizeAll();
 
-    // Reset suppression after a short delay
     setTimeout(() => { clickSuppressed = false; }, 300);
   }
 
   function onPlayerGridMouseOver(e) {
+    if (isTouchDevice) return;
     if (phase !== PHASE.PLACEMENT) return;
     const cell = e.target.closest('.cell');
     if (!cell) return;
-    const row = parseInt(cell.dataset.row);
-    const col = parseInt(cell.dataset.col);
-    lastHoverRow = row;
-    lastHoverCol = col;
-    // Preview uses current orientation from toggle button
-    showPreview(row, col, placementHorizontal);
-  }
-
-  function onPlayerGridMouseOut(e) {
-    clearPreview();
-  }
-
-  // Touch event handlers for mobile placement
-  function onPlayerGridTouchStart(e) {
-    if (phase !== PHASE.PLACEMENT) return;
-    e.preventDefault(); // prevent mouse event emulation
-    const cell = e.target.closest('.cell');
-    if (!cell) {
-      lastHoverRow = -1;
-      lastHoverCol = -1;
-      clearPreview();
-      return;
-    }
     const row = parseInt(cell.dataset.row);
     const col = parseInt(cell.dataset.col);
     lastHoverRow = row;
@@ -1239,57 +1413,15 @@
     showPreview(row, col, placementHorizontal);
   }
 
-  function onPlayerGridTouchMove(e) {
-    if (phase !== PHASE.PLACEMENT) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!el) return;
-    const cell = el.closest('.cell');
-    if (!cell) return;
-    // Only update if cell is inside the player grid
-    if (!playerGridEl.contains(cell)) return;
-    const row = parseInt(cell.dataset.row);
-    const col = parseInt(cell.dataset.col);
-    if (row !== lastHoverRow || col !== lastHoverCol) {
-      lastHoverRow = row;
-      lastHoverCol = col;
-      showPreview(row, col, placementHorizontal);
-    }
-  }
-
-  function onPlayerGridTouchEnd(e) {
-    if (phase !== PHASE.PLACEMENT) return;
-    e.preventDefault();
-    if (lastHoverRow >= 0 && lastHoverCol >= 0) {
-      handlePlacement(lastHoverRow, lastHoverCol, placementHorizontal);
-    }
+  function onPlayerGridMouseOut(e) {
+    if (isTouchDevice) return;
     clearPreview();
+    lastHoverRow = -1;
+    lastHoverCol = -1;
   }
 
-  // Touch handler for enemy grid firing
-  function onEnemyGridTouchStart(e) {
-    if (phase !== PHASE.BATTLE) return;
-    e.preventDefault();
-    const cell = e.target.closest('.cell');
-    if (!cell) return;
-    const row = parseInt(cell.dataset.row);
-    const col = parseInt(cell.dataset.col);
-    handlePlayerAttack(row, col);
-  }
-
-  // Orientation toggle handler
-  function onOrientBtnClick() {
-    placementHorizontal = !placementHorizontal;
-    orientBtn.textContent = placementHorizontal ? 'Horizontal' : 'Vertical';
-    // Update preview if hovering
-    if (lastHoverRow >= 0 && lastHoverCol >= 0 && phase === PHASE.PLACEMENT) {
-      showPreview(lastHoverRow, lastHoverCol, placementHorizontal);
-    }
-  }
-
-  // Enemy grid: attack phase events
   function onEnemyGridClick(e) {
+    if (isTouchDevice) return;
     if (phase !== PHASE.BATTLE) return;
     const cell = e.target.closest('.cell');
     if (!cell) return;
@@ -1298,47 +1430,47 @@
     handlePlayerAttack(row, col);
   }
 
-  // Global context menu suppressor for both grids (always active)
+  // Global context menu suppressor for both grids
   function suppressContextMenu(e) { e.preventDefault(); }
   playerGridEl.addEventListener('contextmenu', suppressContextMenu);
   enemyGridEl.addEventListener('contextmenu', suppressContextMenu);
 
   // === EVENT BINDING ===
   function bindPlacementEvents() {
+    if (isTouchDevice) {
+      playerGridEl.addEventListener('touchend', onPlayerGridTouch);
+    }
     playerGridEl.addEventListener('click', onPlayerGridClick);
     playerGridEl.addEventListener('contextmenu', onPlayerGridRightClick);
     playerGridEl.addEventListener('dblclick', onPlayerGridDblClick);
     playerGridEl.addEventListener('mouseover', onPlayerGridMouseOver);
     playerGridEl.addEventListener('mouseout', onPlayerGridMouseOut);
-    // Touch events for mobile placement
-    playerGridEl.addEventListener('touchstart', onPlayerGridTouchStart);
-    playerGridEl.addEventListener('touchmove', onPlayerGridTouchMove);
-    playerGridEl.addEventListener('touchend', onPlayerGridTouchEnd);
-    orientBtn.addEventListener('click', onOrientBtnClick);
   }
 
   function unbindPlacementEvents() {
+    if (isTouchDevice) {
+      playerGridEl.removeEventListener('touchend', onPlayerGridTouch);
+    }
     playerGridEl.removeEventListener('click', onPlayerGridClick);
     playerGridEl.removeEventListener('contextmenu', onPlayerGridRightClick);
     playerGridEl.removeEventListener('dblclick', onPlayerGridDblClick);
     playerGridEl.removeEventListener('mouseover', onPlayerGridMouseOver);
     playerGridEl.removeEventListener('mouseout', onPlayerGridMouseOut);
-    // Remove touch events
-    playerGridEl.removeEventListener('touchstart', onPlayerGridTouchStart);
-    playerGridEl.removeEventListener('touchmove', onPlayerGridTouchMove);
-    playerGridEl.removeEventListener('touchend', onPlayerGridTouchEnd);
-    orientBtn.removeEventListener('click', onOrientBtnClick);
     clearPreview();
   }
 
   function bindBattleEvents() {
+    if (isTouchDevice) {
+      enemyGridEl.addEventListener('touchend', onEnemyGridTouch);
+    }
     enemyGridEl.addEventListener('click', onEnemyGridClick);
-    enemyGridEl.addEventListener('touchstart', onEnemyGridTouchStart);
   }
 
   function unbindBattleEvents() {
+    if (isTouchDevice) {
+      enemyGridEl.removeEventListener('touchend', onEnemyGridTouch);
+    }
     enemyGridEl.removeEventListener('click', onEnemyGridClick);
-    enemyGridEl.removeEventListener('touchstart', onEnemyGridTouchStart);
   }
 
   // === GAME FLOW ===
@@ -1349,18 +1481,18 @@
     unbindPlacementEvents();
     bindBattleEvents();
     startBtn.classList.add('hidden');
-    placementInfo.classList.add('hidden');
     orientBtn.classList.add('hidden');
-    setStatus('Battle begins! ' + actionWord() + ' on enemy waters to fire.');
+    randomizeBtn.classList.add('hidden');
+    placementInfo.classList.add('hidden');
+    setStatus('Battle begins! Click on enemy waters to fire.');
+    updateBoardVisibility();
     renderAll();
   }
 
   function restartGame() {
-    // Unbind everything
     unbindPlacementEvents();
     unbindBattleEvents();
 
-    // Reset state
     phase = PHASE.PLACEMENT;
     playerBoard = createBoard();
     enemyBoard = createBoard();
@@ -1370,33 +1502,28 @@
     clickTimer = null;
     clickSuppressed = false;
     playerTurnActive = true;
+    pendingPlacement = null;
     placementHorizontal = true;
-    lastHoverRow = -1;
-    lastHoverCol = -1;
+    updateOrientBtn();
 
-    // Place enemy ships randomly
     placeShipsRandomly(enemyBoard, enemyShips, 0);
-
-    // Init AI
     initAI();
 
-    // Reset UI
     startBtn.disabled = true;
     startBtn.classList.remove('hidden', 'flash');
+    orientBtn.classList.remove('hidden');
+    randomizeBtn.classList.remove('hidden');
     restartBtn.classList.add('hidden');
     placementInfo.classList.remove('hidden');
-    orientBtn.classList.remove('hidden');
-    orientBtn.textContent = 'Horizontal';
     updatePlacementInfo();
     showLegendInStatusBar();
 
-    // Remove overlays and rebuild grids
     removeOverlays();
     buildGridDOM(playerGridEl, false);
     buildGridDOM(enemyGridEl, true);
+    updateBoardVisibility();
     renderAll();
 
-    // Rebind placement events
     bindPlacementEvents();
   }
 
@@ -1412,14 +1539,21 @@
 
     buildGridDOM(playerGridEl, false);
     buildGridDOM(enemyGridEl, true);
+    updateBoardVisibility();
     renderAll();
     updatePlacementInfo();
     showLegendInStatusBar();
+    updateOrientBtn();
 
     bindPlacementEvents();
 
     startBtn.addEventListener('click', startBattle);
     restartBtn.addEventListener('click', restartGame);
+    orientBtn.addEventListener('click', toggleOrientation);
+    randomizeBtn.addEventListener('click', handleRandomizeAll);
+
+    // Listen for viewport changes to update board visibility
+    window.matchMedia('(max-width: 480px)').addEventListener('change', updateBoardVisibility);
   }
 
   document.addEventListener('keydown', function(e) {
