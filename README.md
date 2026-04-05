@@ -1,16 +1,25 @@
 # Battleship
 
-A browser-based Battleship game against an AI opponent, built as a single HTML file with no dependencies.
+A browser-based Battleship game where you play against an AI opponent. Built as a single HTML file with no external dependencies — just open and play.
 
 ## How to Play
 
 ### 1. Placement Phase
 
-Place 5 ships on your 10×10 grid. Select a ship, choose orientation (horizontal/vertical — toggle with the button or press **R**), and click the grid to place it. You can also use **Random** to auto-place all ships, or **Reset** to start placement over.
+Place 5 ships on your 10×10 grid:
+
+- Select a ship from the roster.
+- Choose orientation (horizontal or vertical) by clicking the toggle button or pressing **R**.
+- Click a cell on your grid to place the ship.
+- Use **Random** to auto-place all ships, or **Reset** to start placement over.
 
 ### 2. Battle Phase
 
-Take turns with the AI. Click a cell on the enemy grid to fire. Hits show fire, misses show a dot, and sunk ships are marked with **X**. The AI uses a hunt/target strategy.
+Take turns with the AI:
+
+- Click a cell on the enemy grid to fire.
+- **Hits** show fire, **misses** show a dot, and **sunk ships** are marked with X.
+- The AI uses a hunt/target strategy to find and sink your ships.
 
 ### 3. Game Over
 
