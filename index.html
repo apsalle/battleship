@@ -399,6 +399,81 @@
     color: #6B4FA0;
   }
 
+  /* === MINI-FLEET MAP === */
+  #mini-fleet {
+    position: fixed;
+    bottom: 12px;
+    left: 12px;
+    z-index: 100;
+    background: rgba(35, 25, 60, 0.85);
+    border: 1px solid rgba(155, 142, 196, 0.4);
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0.9;
+  }
+
+  #mini-fleet-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 1px;
+  }
+
+  .mini-cell {
+    width: 12px;
+    height: 12px;
+    background: #1a1230;
+    border-radius: 1px;
+  }
+
+  .mini-cell.ship {
+    background: rgba(79, 195, 247, 0.25);
+  }
+
+  .mini-cell.hit {
+    background: rgba(239, 83, 80, 0.35);
+  }
+
+  .mini-cell.miss {
+    background: rgba(120, 144, 156, 0.25);
+  }
+
+  .mini-cell.sunk {
+    background: rgba(239, 83, 80, 0.5);
+  }
+
+  .mini-fleet-label {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 0.6rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #9B8EC4;
+    margin-bottom: 4px;
+  }
+
+  #mini-fleet-close {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    background: none;
+    border: none;
+    color: #9B8EC4;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+  }
+
+  #mini-fleet-close:hover {
+    color: #fff;
+  }
+
+  /* Hide mini-fleet on desktop where both boards are visible */
+  @media (min-width: 901px) {
+    #mini-fleet { display: none !important; }
+  }
+
   .hidden { display: none !important; }
 
   /* Orientation toggle button */
@@ -613,6 +688,12 @@
     </div>
     <div class="ship-roster" id="enemyRoster"></div>
   </div>
+</div>
+
+<div id="mini-fleet" style="display:none;">
+    <button id="mini-fleet-close" aria-label="Close mini-map">&times;</button>
+    <div class="mini-fleet-label">Your Fleet</div>
+    <div id="mini-fleet-grid"></div>
 </div>
 
 <div class="controls">
@@ -1123,6 +1204,7 @@
       showSkull(enemyGridEl);
       restartBtn.classList.remove('hidden');
       updateBoardVisibility();
+      updateMiniFleetVisibility();
       return;
     }
 
@@ -1197,6 +1279,7 @@
 
     const result = processAttack(playerBoard, playerShips, row, col);
     renderAll();
+    renderMiniFleet();
 
     if (result === 'hit') {
       aiState.mode = 'target';
@@ -1230,6 +1313,7 @@
       showSkull(playerGridEl);
       restartBtn.classList.remove('hidden');
       updateBoardVisibility();
+      updateMiniFleetVisibility();
       return;
     }
   }
@@ -1283,6 +1367,61 @@
         aiState.targetQueue.push(d);
       }
     });
+  }
+
+  // === MINI-FLEET MAP ===
+  const miniFleetEl = document.getElementById('mini-fleet');
+  const miniFleetGridEl = document.getElementById('mini-fleet-grid');
+  const miniFleetCloseBtn = document.getElementById('mini-fleet-close');
+  let miniFleetHidden = false; // user manually closed
+
+  miniFleetCloseBtn.addEventListener('click', function() {
+    miniFleetHidden = true;
+    miniFleetEl.style.display = 'none';
+  });
+
+  function buildMiniFleetGrid() {
+    miniFleetGridEl.innerHTML = '';
+    for (var r = 0; r < GRID_SIZE; r++) {
+      for (var c = 0; c < GRID_SIZE; c++) {
+        var cell = document.createElement('div');
+        cell.className = 'mini-cell';
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+        miniFleetGridEl.appendChild(cell);
+      }
+    }
+  }
+
+  function renderMiniFleet() {
+    var cells = miniFleetGridEl.querySelectorAll('.mini-cell');
+    cells.forEach(function(cell) {
+      var r = parseInt(cell.dataset.row);
+      var c = parseInt(cell.dataset.col);
+      var val = playerBoard[r][c];
+      cell.className = 'mini-cell';
+      if (val === CELL.SHIP) {
+        cell.classList.add('ship');
+      } else if (val === CELL.HIT) {
+        cell.classList.add('hit');
+      } else if (val === CELL.MISS) {
+        cell.classList.add('miss');
+      } else if (val === CELL.SUNK) {
+        cell.classList.add('sunk');
+      }
+    });
+  }
+
+  function updateMiniFleetVisibility() {
+    if (miniFleetHidden) {
+      miniFleetEl.style.display = 'none';
+      return;
+    }
+    if (phase === PHASE.BATTLE || phase === PHASE.GAME_OVER) {
+      miniFleetEl.style.display = 'block';
+    } else {
+      miniFleetEl.style.display = 'none';
+    }
   }
 
   // === TROPHY OVERLAY ===
@@ -1489,6 +1628,9 @@
     setStatus('Battle begins! ' + actionWord() + ' on enemy waters to fire.');
     updateBoardVisibility();
     renderAll();
+    buildMiniFleetGrid();
+    renderMiniFleet();
+    updateMiniFleetVisibility();
   }
 
   function restartGame() {
@@ -1527,6 +1669,8 @@
     buildGridDOM(enemyGridEl, true);
     updateBoardVisibility();
     renderAll();
+    miniFleetHidden = false;
+    updateMiniFleetVisibility();
 
     bindPlacementEvents();
   }
@@ -1550,6 +1694,7 @@
     updateOrientBtn();
 
     bindPlacementEvents();
+    updateMiniFleetVisibility();
 
     startBtn.addEventListener('click', startBattle);
     restartBtn.addEventListener('click', restartGame);
